@@ -1,0 +1,170 @@
+.Chat {
+  padding: 1rem 0.5rem;
+  height: 100vh;
+  .Chat-content {
+    width: 100%;
+    max-width: 30rem;
+    border: 0.07rem solid #8a8a8a;
+    border-radius: 0.5rem;
+    margin: 0 auto;
+    height: 100%;
+    display: grid;
+    grid-gap: 0.5rem;
+    grid-template-rows: 2rem 1.3rem 1fr auto;
+    grid-template-columns: 100%;
+    padding: 1rem;
+    .Chat-header {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .exit-btn {
+      button {
+        padding: 0.25rem;
+        font-weight: 600;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        svg {
+          margin-right: 0.2rem;
+        }
+      }
+    }
+    .texts {
+      border: 0.07rem solid #8a8a8a;
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+      &::-webkit-scrollbar {
+        height: 0.25rem;
+        width: 0.25rem;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: #8a8a8a;
+        border-radius: 0.5rem;
+      }
+      &::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 0.5rem;
+        padding: 0.5rem 0;
+      }
+      .Text {
+        margin: 0.5rem 0;
+        .Text-content {
+          .Text-sender {
+            text-align: left;
+            font-size: 0.8rem;
+            margin-bottom: 0.25rem;
+            color: #8a8a8a;
+          }
+        }
+        width: calc(100% - 1rem);
+        margin-right: 1rem;
+        text-align: left;
+        .Text-content {
+          display: inline-block;
+          padding: 0.5rem;
+          border-radius: 0.5rem;
+          border-bottom-left-radius: 0;
+          background: #EEE;
+          color: #000;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+        }
+        &[is-current-user] {
+          width: calc(100% - 1rem);
+          margin-left: 1rem;
+          text-align: right;
+          .Text-content {
+            display: inline-block;
+            text-align: left;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            border-bottom-right-radius: 0;
+            background: #5DADE2;
+            color: #FFF;
+          }
+          .Text-createdAt {
+            text-align: right;
+            font-size: 0.8rem;
+            margin-bottom: 0.25rem;
+            color: #EEE;
+          }
+        }
+        &[is-from-console] {
+          width: calc(100% - 4rem);
+          margin: 0.5rem 2rem;
+          text-align: center;
+          .Text-content {
+            display: inline-block;
+            padding: 0.25rem;
+            border-radius: 0.5rem;
+            background: #EFEFEF;
+            color: #333;
+            width: 100%;
+            font-size: 0.8rem;
+            font-weight: 600;
+          }
+        }
+      }
+    }
+    .new-text {
+      display: flex;
+      input {
+        flex: 1;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        border-right: none;
+        width: calc(100% - 3rem);
+      }
+      button[type="submit"] {
+        width: 3rem;
+        border: none;
+        background: #3498DB;
+        color: #FFF;
+        border-top-right-radius: 0.5rem;
+        border-bottom-right-radius: 0.5rem;
+        cursor: pointer;
+        transition: 300ms ease opacity;
+        &:hover {
+          opacity: 0.7;
+        }
+      }
+    }
+  }
+}
+
+body[theme="dark"] {
+  .new-text {
+    button[type="submit"] {
+      background: #777 !important;
+      color: #333 !important;
+    }
+  }
+  .texts {
+    .Text {
+      .Text-content {
+        background: #3f3f3f !important;
+        color: #FFF !important;
+      }
+      .Text-sender {
+        color: #ddd !important;
+      }
+      &[is-current-user] {
+        .Text-content {
+          background: #555 !important;
+        }
+        .Text-createdAt {
+          color: #aaa !important;
+        }
+      }
+      &[is-from-console] {
+        .Text-content {
+          background: #444 !important;
+          color: #aaa !important;
+        }
+      }
+    }
+  }
+}
