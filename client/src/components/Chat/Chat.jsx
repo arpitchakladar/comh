@@ -35,7 +35,6 @@ const Chat = ({ location }) => {
         Swal.fire('Error', validationResult.name, 'error');
         history.push('/');
       } else if (validationResult.room) {
-        console.log('here');
         Swal.fire('Error', validationResult.room, 'error');
         history.push('/');
       }
