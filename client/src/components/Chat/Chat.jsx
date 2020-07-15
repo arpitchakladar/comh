@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import './Chat.scss';
-import { ReactComponent as SignOutSvg } from '@/assets/sign-out.svg';
-import { ReactComponent as ArrowRightSvg } from '@/assets/arrow-right.svg';
+import { FaSignOutAlt, FaArrowRight } from 'react-icons/fa';
 import queryString from 'query-string';
 import io from 'socket.io-client';
 import { useHistory } from 'react-router-dom';
@@ -42,10 +41,8 @@ const Chat = ({ location }) => {
       }
 
       if (localStorage.getItem('room') !== query.room && localStorage.getItem('name') !== query.name) {
-        localStorage.removeItem('room');
-        localStorage.removeItem('name');
-        localStorage.setItem('room', query.room, { expires: 365, path: '/' });
-        localStorage.setItem('name', query.name, { expires: 365, path: '/' });
+        localStorage.setItem('room', query.room);
+        localStorage.setItem('name', query.name);
       }
 
       document.title = `Comh - ${query.room}`;
@@ -103,7 +100,7 @@ const Chat = ({ location }) => {
         <div className="Chat-header">{query.room}</div>
         <div className="exit-btn">
           <button onClick={() => history.push('/')}>
-            <SignOutSvg />
+            <FaSignOutAlt />
             Exit
           </button>
         </div>
@@ -126,7 +123,7 @@ const Chat = ({ location }) => {
         <form className="new-text" onSubmit={handleSubmit} autoComplete="off">
           <input type="text" value={newText} onChange={e => setNewText(e.target.value)} />
           <button type="submit">
-            <ArrowRightSvg />
+            <FaArrowRight />
           </button>
         </form>
       </div>

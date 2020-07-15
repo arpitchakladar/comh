@@ -18,3 +18,14 @@ ReactDOM.render(
 );
 
 navigator.serviceWorker.register('/service-worker.js');
+
+document.addEventListener('DOMContentLoaded', () => {
+  const theme = localStorage.getItem('theme');
+  const _theme = theme ? theme : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+
+  document.body.setAttribute('theme', _theme);
+
+  if (!navigator.onLine) {
+    document.getElementById('root').innerHTML = '<div class="offline">You are currently offline...</div>';
+  }
+}, false);

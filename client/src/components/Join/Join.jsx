@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ReactComponent as SignInSvg } from '@/assets/sign-in.svg';
+import { FaSignInAlt } from 'react-icons/fa';
 import { useSelector, useDispatch } from 'react-redux';
 import { setWhatsNews } from '@/actions/whatsNew';
 import './Join.scss';
@@ -80,7 +80,7 @@ const Join = () => {
         <input type="text" name="room" placeholder="Room" invalid={!!formErrors.room} value={formData.room} onChange={handleChange} onBlur={handleBlur} />
         {formErrors.room !== '' && <div className="validation-error">{formErrors.room}</div>}
         <button type="submit">
-          <SignInSvg />
+          <FaSignInAlt />
           <span>join</span>
         </button>
       </form>

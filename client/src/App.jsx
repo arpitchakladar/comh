@@ -2,36 +2,21 @@ import React, { useState, useEffect } from 'react';
 import './App.scss';
 import { TransitionGroup, CSSTransition } from 'react-transition-group';
 import { Switch, Route, Redirect } from 'react-router-dom';
-import Cookies from 'js-cookie';
 import Join from '@/components/Join/Join';
 import Chat from '@/components/Chat/Chat';
 
 const App = () => {
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState();
 
-  useEffect(() => {
-    const _theme = Cookies.get('theme');
+  useEffect(() => setTheme(document.body.getAttribute('theme')), []);
 
-    if (_theme) {
-      setTheme(_theme);
-    } else {
-      setTheme((window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light');
-    }
-  }, []);
-
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.body.setAttribute('theme', 'dark');
-    } else {
-      document.body.setAttribute('theme', 'light');
-    }
-  }, [theme]);
+  useEffect(() => document.body.setAttribute('theme', theme), [theme]);
 
   const handleToggleTheme = () => {
     setTheme(theme => {
       const _theme = theme !== 'light' ? 'light' : 'dark';
 
-      Cookies.set('theme', _theme, { expires: 30, path: '/' });
+      localStorage.setItem('theme', _theme);
 
       return _theme;
     });

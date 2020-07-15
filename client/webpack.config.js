@@ -87,8 +87,7 @@ module.exports = {
 				{ from: path.join(__dirname, 'public', 'manifest.json'), to: './' },
 				{ from: path.join(__dirname, 'public', 'favicon.png'), to: './' },
 				{ from: path.join(__dirname, 'public', 'favicon.ico'), to: './' },
-				{ from: path.join(__dirname, 'public', 'robots.txt'), to: './' },
-				{ from: path.join(__dirname, 'public', 'status.js'), to: './' }
+				{ from: path.join(__dirname, 'public', 'robots.txt'), to: './' }
 			]
 		}),
 		new SWPrecacheWebpackPlugin({
