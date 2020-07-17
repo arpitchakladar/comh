@@ -110,7 +110,7 @@ const Chat = ({ location }) => {
                 <div className="Text-content">
                   {texts[k].sender && (query.name !== texts[k].sender
                     ? <div className="Text-sender">{texts[k].sender}{texts[k].createdAt && <> • {timeElapsed(texts[k].createdAt)} ago</>}</div>
-                    : <div className="Text-createdAt">{texts[k].createdAt && <>{timeElapsed(texts[k].createdAt)} ago</>}</div>)
+                    : texts[k].createdAt && <div className="Text-createdAt">{timeElapsed(texts[k].createdAt)} ago</div>)
                   }
                   <Linkify>{texts[k].text}</Linkify>
                 </div>
