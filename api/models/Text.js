@@ -15,4 +15,6 @@ const TextSchema = mongoose.Schema({
 	}
 }, { timestamps: { createdAt: true, updatedAt: false } });
 
+TextSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 7 });
+
 module.exports = mongoose.model('Text', TextSchema);
