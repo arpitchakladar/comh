@@ -39,10 +39,8 @@ const Chat = ({ location }) => {
         history.push('/');
       }
 
-      if (localStorage.getItem('room') !== query.room && localStorage.getItem('name') !== query.name) {
-        localStorage.setItem('room', query.room);
-        localStorage.setItem('name', query.name);
-      }
+      localStorage.setItem('room', query.room);
+      localStorage.setItem('name', query.name);
 
       document.title = `Comh - ${query.room}`;
 
