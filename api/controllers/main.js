@@ -15,8 +15,22 @@ exports.join = async (socket, { name, room }, callback) => {
 
   await user.save();
 
-  const backup = await Text.find({ room }).sort('createdAt');
-  
+  const backup = await Promise.all((await Text.find({ room }).sort('createdAt')).map(async text => {
+    if (text.tagged) {
+      const t = text.toObject();
+
+      const taggedText = await Text.findOne({ _id: t.tagged });
+
+      if (taggedText) {
+        t.tagged = taggedText;
+      } else {
+        t.tagged = undefined;
+      }
+
+      return t;
+    } else return text.toObject();
+  }));
+
   if (backup.length > 0) {
     socket.emit('backup', { backup });
   }
@@ -30,7 +44,7 @@ exports.join = async (socket, { name, room }, callback) => {
   callback({});
 };
 
-exports.sendText = async (io, socket, text) => {
+exports.sendText = async (io, socket, { text, tagged }) => {
 	if (text) {
 	  const user = await User.findOne({ _id: socket.id });
 
@@ -38,11 +52,22 @@ exports.sendText = async (io, socket, text) => {
 	  	text,
       sender: user.name,
       room: user.room
-	  });
+    });
+
+    const responseText = _text.toObject();
+
+    if (tagged) {
+      const taggedText = await Text.findOne({ _id: tagged });
+      responseText.tagged = taggedText;
+      if (!taggedText) {
+        return;
+      }
+      _text.tagged = tagged;
+    }
 
     await _text.save();
 
-	  io.to(user.room).emit('text', { text: { text, sender: user.name } });
+	  io.to(user.room).emit('text', { text: responseText });
 	}
 };
 

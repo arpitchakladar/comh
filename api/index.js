@@ -26,7 +26,7 @@ app.post('/whatsnew', mainController.addWhatsNew);
 io.on('connection', socket => {
   socket.on('join', ({ name, room }, callback) => mainController.join(socket, { name, room }, callback));
 
-  socket.on('sendText', (text) => mainController.sendText(io, socket, text));
+  socket.on('sendText', data => mainController.sendText(io, socket, data));
 
   socket.on('disconnect', () => mainController.disconnect(socket));
 });

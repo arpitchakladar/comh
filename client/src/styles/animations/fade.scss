@@ -1,15 +1,7 @@
-@keyframes fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 .fade-enter-active {
   animation: 650ms linear fade;
 }
+
 .fade-exit-active {
-  display: none;
+  animation: 650ms linear fade reverse;
 }

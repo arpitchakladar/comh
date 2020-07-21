@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import './Chat.scss';
-import { FaSignOutAlt, FaArrowRight } from 'react-icons/fa';
+import { CSSTransition } from 'react-transition-group';
+import { FaSignOutAlt, FaArrowRight, FaTag, FaTimes, FaArrowDown } from 'react-icons/fa';
 import queryString from 'query-string';
 import io from 'socket.io-client';
 import { useHistory } from 'react-router-dom';
@@ -15,12 +16,19 @@ let socket;
 const audio = new Audio(NotifySound);
 audio.volume = 0.3;
 
+let firstScrollToTheBottom = false;
+
 const Chat = ({ location }) => {
   const [texts, setTexts] =  useState(null);
-  const [newText, setNewText] = useState('');
+  const [newText, setNewText] = useState({ text: '', tagged: null });
+  const [showScrollToTheBottom, setShowScrollToTheBottom] = useState(false);
   const history = useHistory();
   const textsElement = useRef(null);
   const query = useMemo(() => queryString.parse(location.search), [location.search]);
+  const taggedMessage = useMemo(() => {
+    if (texts && newText.tagged) return texts.find(text => text._id === newText.tagged);
+    else return null;
+  }, [newText.tagged]);
 
   useEffect(() => {
     let mounted = true;
@@ -62,7 +70,11 @@ const Chat = ({ location }) => {
         }
       });
 
-      socket.on('backup', ({ backup }) => setTexts(texts => texts ? [...backup, ...texts] : backup));
+      socket.on('backup', ({ backup }) => {
+        setTexts(texts => texts ? [...backup, ...texts] : backup);
+      });
+
+      textsElement.current.addEventListener('scroll', () => setShowScrollToTheBottom(textsElement.current.scrollHeight - textsElement.current.scrollTop > 1500));
     } else {
       history.push('/');
     }
@@ -76,25 +88,43 @@ const Chat = ({ location }) => {
   }, [query, history]);
 
   useEffect(() => {
-    textsElement.current.scroll({
-      top: textsElement.current.scrollHeight,
-      behavior: 'smooth'
-    });
+    if (!firstScrollToTheBottom && texts) {
+      scrollToBottom();
+      firstScrollToTheBottom = true;
+    }
   }, [texts]);
+
+  const scrollToBottom = () => textsElement.current.scroll({ top: textsElement.current.scrollHeight, behavior: 'smooth' });
 
   const handleSubmit = e => {
     e.preventDefault();
     
-    if (newText !== '') {
-      socket.emit('sendText', newText);
-      setNewText('');
+    if (newText.text !== '') {
+      socket.emit('sendText', { text: newText.text, tagged: newText.tagged });
+      setNewText({ text: '', tagged: null });
+    }
+  };
+
+  const handleTag = _id => {
+    if (texts.findIndex(text => text._id === _id) > -1) setNewText(state => ({ ...state, tagged: _id }));
+  };
+
+  const scrollToText = _id => {
+    const textElem = document.querySelector(`.text[id="${_id}"]`);
+
+    if (textElem) {
+      textsElement.current.scroll({ top: textElem.offsetTop - 20, behavior: 'smooth' });
+      textElem.classList.remove('fade-enter-active');
+      setTimeout(() => textElem.classList.add('fade-enter-active'), 300);
+    } else {
+      Swal.fire('Error', 'The message was not found', 'error');
     }
   };
 
   return (
     <div className="Chat">
-      <div className="Chat-content">
-        <div className="Chat-header">{query.room}</div>
+      <div className="chat-content">
+        <div className="chat-header">{query.room}</div>
         <div className="exit-btn">
           <button onClick={() => history.push('/')}>
             <FaSignOutAlt />
@@ -103,25 +133,50 @@ const Chat = ({ location }) => {
         </div>
         <div className="texts" ref={textsElement}>
           {texts
-            ? Object.keys(texts).map(k => 
-              <div className="Text fade-enter-active" key={k} is-current-user={query.name === texts[k].sender} is-from-console={!texts[k].sender}>
-                <div className="Text-content">
-                  {texts[k].sender && (query.name !== texts[k].sender
-                    ? <div className="Text-sender">{texts[k].sender}{texts[k].createdAt && <> • {timeElapsed(texts[k].createdAt)} ago</>}</div>
-                    : texts[k].createdAt && <div className="Text-createdAt">{timeElapsed(texts[k].createdAt)} ago</div>)
-                  }
-                  <Linkify>{texts[k].text}</Linkify>
-                </div>
-              </div>
-            )
+            ? <>
+                {texts.map(text => 
+                <div className="text fade-enter-active" id={text._id} key={text._id} is-current-user={query.name === text.sender} is-from-console={!text.sender}>
+                  <div className="text-content">
+                    {text.sender &&
+                      (query.name !== text.sender
+                        ? <div className="text-sender">{text.sender}{text.createdAt && <> • {timeElapsed(text.createdAt)} ago</>}</div>
+                        : text.createdAt && <div className="text-createdAt">{timeElapsed(text.createdAt)} ago</div>)}
+                    {text.tagged && <div className="text-tagged" onClick={() => scrollToText(text.tagged._id)}>
+                      <div className="text-tagged-sender">{text.tagged.sender}</div>
+                      <div className="text-tagged-content">{text.tagged.text}</div>
+                    </div>}
+                    <Linkify>{text.text}</Linkify>
+                    {text.sender &&
+                      <button className="tag" onClick={() => handleTag(text._id)}>
+                        <FaTag />
+                      </button>}
+                  </div>
+                </div>)}
+                <CSSTransition in={showScrollToTheBottom} classNames="fade" timeout={600} unmountOnExit={true}>
+                  <button className="scroll-below" onClick={scrollToBottom}>
+                    <FaArrowDown />
+                  </button>
+                </CSSTransition>
+              </>
             : <img src={LoadingGif} alt="" className="Loading" />
           }
         </div>
         <form className="new-text" onSubmit={handleSubmit} autoComplete="off">
-          <input type="text" value={newText} onChange={e => setNewText(e.target.value)} />
-          <button type="submit">
-            <FaArrowRight />
-          </button>
+          {taggedMessage && <div className="tagged">
+              <div className="text" key={taggedMessage._id} is-current-user={query.name === taggedMessage.sender}>
+                <div className="text-content">
+                  {taggedMessage.sender && <div className="text-sender">{taggedMessage.sender}</div>}
+                  <div className="text-message"><Linkify>{taggedMessage.text}</Linkify></div>
+                  <button className="cancel" type="button" onClick={() => setNewText(state => ({ ...state, tagged: null }))}><FaTimes /></button>
+                </div>
+              </div>
+          </div>}
+          <div className="new-text-fields">
+            <input type="text" value={newText.text} onChange={e => setNewText(state => ({...state, text: e.target.value}))} />
+            <button type="submit">
+              <FaArrowRight />
+            </button>
+          </div>
         </form>
       </div>
     </div>

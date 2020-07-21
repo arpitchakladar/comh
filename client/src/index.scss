@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
+@import url('./styles/animations/route.scss');
 @import url('./styles/animations/fade.scss');
 
 * {
@@ -8,6 +9,15 @@
   box-sizing: border-box;
   font-family: 'Montserrat', sans-serif;
   z-index: 30;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 body {

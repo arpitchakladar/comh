@@ -29,7 +29,7 @@ const App = () => {
       </div>
       <Route render={({ location }) =>
         <TransitionGroup className="Views-Content">
-          <CSSTransition key={location.key} timeout={600} classNames="fade">
+          <CSSTransition key={location.key} timeout={600} classNames="route">
             <Switch location={location}>
               <Route path="/" exact component={Join} />
               <Route path="/chat" component={Chat} />

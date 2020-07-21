@@ -1,7 +1,7 @@
 .Chat {
   padding: 1rem 0.5rem;
   height: 100vh;
-  .Chat-content {
+  .chat-content {
     width: 100%;
     max-width: 30rem;
     border: 0.07rem solid #8a8a8a;
@@ -13,7 +13,7 @@
     grid-template-rows: 2rem 1.3rem 1fr auto;
     grid-template-columns: 100%;
     padding: 1rem;
-    .Chat-header {
+    .chat-header {
       font-size: 1.5rem;
       font-weight: 600;
       overflow: hidden;
@@ -51,10 +51,10 @@
         border-radius: 0.5rem;
         padding: 0.5rem 0;
       }
-      .Text {
+      .text {
         margin: 0.5rem 0;
-        .Text-content {
-          .Text-sender {
+        .text-content {
+          .text-sender {
             text-align: left;
             font-size: 0.8rem;
             margin-bottom: 0.25rem;
@@ -64,7 +64,7 @@
         width: calc(100% - 1rem);
         margin-right: 1rem;
         text-align: left;
-        .Text-content {
+        .text-content {
           display: inline-block;
           padding: 0.5rem;
           border-radius: 0.5rem;
@@ -75,21 +75,68 @@
           overflow-wrap: break-word;
           width: auto;
           max-width: calc(100% - 1rem);
+          padding-right: 24px !important;
+          position: relative;
+          .text-tagged {
+            background: #fff;
+            border-radius: 10px;
+            padding: 8px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: 300ms ease opacity;
+            &:hover {
+              opacity: 0.5;
+            }
+            .text-tagged-sender {
+              color: #777;
+              font-size: 0.8rem;
+            }
+            .text-tagged-content {
+              font-size: 0.9rem;
+              overflow: hidden;
+              width: 100%;
+              text-overflow: ellipsis;
+            }
+          }
+          .tag {
+            position: absolute;
+            right: 4px;
+            top: 8px;
+            height: 16px;
+            width: 16px;
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+          }
         }
         &[is-current-user] {
           width: calc(100% - 1rem);
           margin-left: 1rem;
           text-align: right;
-          .Text-content {
+          .text-content {
             display: inline-block;
             text-align: left;
             padding: 0.5rem;
             border-radius: 0.5rem;
             border-bottom-right-radius: 0;
             background: #5DADE2;
+            padding-right: 0.5rem !important;
+            padding-left: 24px !important;
             color: #FFF;
+            .text-tagged {
+              background: #fff;
+              .text-tagged-content {
+                color: #333;
+              }
+            }
+            .tag {
+              right: auto;
+              color: #EEE;
+              left: 4px;
+            }
           }
-          .Text-createdAt {
+          .text-createdAt {
             text-align: right;
             font-size: 0.8rem;
             margin-bottom: 0.25rem;
@@ -100,7 +147,7 @@
           width: calc(100% - 4rem);
           margin: 0.5rem 2rem;
           text-align: center;
-          .Text-content {
+          .text-content {
             display: inline-block;
             padding: 0.25rem;
             border-radius: 0.5rem;
@@ -112,27 +159,70 @@
           }
         }
       }
+      .scroll-below {
+        position: sticky;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        height: 40px;
+        width: 40px;
+        border-radius: 50%;
+        display: block;
+        border: none;
+        background: #999;
+        cursor: pointer;
+      }
     }
     .new-text {
-      display: flex;
-      input {
-        flex: 1;
-        border-top-right-radius: 0;
-        border-bottom-right-radius: 0;
-        border-right: none;
-        width: calc(100% - 3rem);
+      .tagged {
+        padding: 8px;
+        border-radius: 5px;
+        background: #eee;
+        margin-bottom: 10px;
+        padding-right: 24px;
+        position: relative;
+        .text-sender {
+          font-size: 0.8rem;
+          color: #3f3f3f;
+        }
+        .text-message {
+          width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .cancel {
+          position: absolute;
+          right: 8px;
+          top: 8px;
+          height: 16px;
+          width: 16px;
+          background: none;
+          border: none;
+          color: #333;
+          cursor: pointer;
+        }
       }
-      button[type="submit"] {
-        width: 3rem;
-        border: none;
-        background: #3498DB;
-        color: #FFF;
-        border-top-right-radius: 0.5rem;
-        border-bottom-right-radius: 0.5rem;
-        cursor: pointer;
-        transition: 300ms ease opacity;
-        &:hover {
-          opacity: 0.7;
+      .new-text-fields {
+        display: flex;
+        input {
+          flex: 1;
+          border-top-right-radius: 0;
+          border-bottom-right-radius: 0;
+          border-right: none;
+          width: calc(100% - 3rem);
+        }
+        button[type="submit"] {
+          width: 3rem;
+          border: none;
+          background: #3498DB;
+          color: #FFF;
+          border-top-right-radius: 0.5rem;
+          border-bottom-right-radius: 0.5rem;
+          cursor: pointer;
+          transition: 300ms ease opacity;
+          &:hover {
+            opacity: 0.7;
+          }
         }
       }
     }
@@ -141,30 +231,54 @@
 
 body[theme="dark"] {
   .new-text {
+    .tagged {
+      background: #3f3f3f !important;
+      .text-sender {
+        color: #eee !important;;
+      }
+      .text-message {
+        color: #888 !important;
+      }
+      .cancel {
+        color: #666 !important;
+      }
+    }
     button[type="submit"] {
       background: #777 !important;
       color: #333 !important;
     }
   }
   .texts {
-    .Text {
-      .Text-content {
+    .text {
+      .text-content {
         background: #3f3f3f !important;
         color: #FFF !important;
+        .text-tagged {
+          background: #666 !important;
+          .text-tagged-sender {
+            color: #fff !important;
+          }
+          .text-tagged-content {
+            color: #ddd !important;
+          }
+        }
       }
-      .Text-sender {
+      .text-sender {
         color: #ddd !important;
       }
       &[is-current-user] {
-        .Text-content {
+        .text-content {
           background: #555 !important;
+          .tag {
+            color: #3f3f3f !important;
+          }
         }
-        .Text-createdAt {
+        .text-createdAt {
           color: #aaa !important;
         }
       }
       &[is-from-console] {
-        .Text-content {
+        .text-content {
           background: #444 !important;
           color: #aaa !important;
         }
