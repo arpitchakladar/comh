@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import './Chat.scss';
 import { CSSTransition } from 'react-transition-group';
-import { FaSignOutAlt, FaArrowRight, FaTag, FaTimes, FaArrowDown } from 'react-icons/fa';
+import { FaSignOutAlt, FaArrowRight, FaTag, FaTimes, FaArrowDown, FaEllipsisV } from 'react-icons/fa';
 import queryString from 'query-string';
 import io from 'socket.io-client';
 import { useHistory } from 'react-router-dom';
@@ -22,6 +22,7 @@ const Chat = ({ location }) => {
   const [texts, setTexts] =  useState(null);
   const [newText, setNewText] = useState({ text: '', tagged: null });
   const [showScrollToTheBottom, setShowScrollToTheBottom] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const history = useHistory();
   const textsElement = useRef(null);
   const query = useMemo(() => queryString.parse(location.search), [location.search]);
@@ -98,7 +99,7 @@ const Chat = ({ location }) => {
 
   const handleSubmit = e => {
     e.preventDefault();
-    
+
     if (newText.text !== '') {
       socket.emit('sendText', { text: newText.text, tagged: newText.tagged });
       setNewText({ text: '', tagged: null });
@@ -124,18 +125,24 @@ const Chat = ({ location }) => {
   return (
     <div className="Chat">
       <div className="chat-content">
-        <div className="chat-header">{query.room}</div>
-        <div className="exit-btn">
-          <button onClick={() => history.push('/')}>
-            <FaSignOutAlt />
-            Exit
-          </button>
+        <div className="chat-header">
+          <div className="room-name">{query.room}</div>
+          <div className="chat-menu">
+            <button type="button" className="chat-menu-toggle" onBlur={() => setShowMenu(false)} onClick={() => setShowMenu(state => !state)}><FaEllipsisV /></button>
+            <CSSTransition in={showMenu} timeout={600} classNames="fade" unmountOnExit={true}>
+              <div className="chat-menu-content">
+                <ul>
+                  <li onClick={() => history.push('/')}><FaSignOutAlt /> <div>exit</div></li>
+                </ul>
+              </div>
+            </CSSTransition>
+          </div>
         </div>
         <div className="texts" ref={textsElement}>
           {texts
             ? <>
-                {texts.map(text => 
-                <div className="text fade-enter-active" id={text._id} key={text._id} is-current-user={query.name === text.sender} is-from-console={!text.sender}>
+                {texts.map((text, i) => 
+                <div className="text fade-enter-active" id={i} key={text._id} is-current-user={query.name === text.sender} is-from-console={!text.sender}>
                   <div className="text-content">
                     {text.sender &&
                       (query.name !== text.sender
@@ -147,7 +154,7 @@ const Chat = ({ location }) => {
                     </div>}
                     <Linkify>{text.text}</Linkify>
                     {text.sender &&
-                      <button className="tag" onClick={() => handleTag(text._id)}>
+                      <button className="tag" onClick={() => handleTag(i)}>
                         <FaTag />
                       </button>}
                   </div>

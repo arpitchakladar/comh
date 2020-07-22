@@ -1,80 +1,128 @@
+@import '@/styles/styles.scss';
+
 .Chat {
-  padding: 1rem 0.5rem;
+  padding: 16px 8px;
   height: 100vh;
   .chat-content {
     width: 100%;
-    max-width: 30rem;
-    border: 0.07rem solid #8a8a8a;
-    border-radius: 0.5rem;
+    max-width: 480px;
+    border: 1px solid #8a8a8a;
+    border-radius: 8px;
     margin: 0 auto;
     height: 100%;
     display: grid;
-    grid-gap: 0.5rem;
-    grid-template-rows: 2rem 1.3rem 1fr auto;
+    grid-gap: 8px;
+    grid-template-rows: 32px 1fr auto;
     grid-template-columns: 100%;
-    padding: 1rem;
+    padding: 16px;
     .chat-header {
-      font-size: 1.5rem;
-      font-weight: 600;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .exit-btn {
-      button {
-        padding: 0.25rem;
+      display: flex;
+      justify-content: space-between;
+      .room-name {
+        font-size: 1.5rem;
         font-weight: 600;
-        border-radius: 10px;
-        border: none;
-        cursor: pointer;
-        svg {
-          margin-right: 0.2rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: calc(100% - 32px)
+      }
+      .chat-menu {
+        position: relative;
+        z-index: 100;
+        .chat-menu-toggle {
+          height: 28px;
+          width: 28px;
+          padding: 4px;
+          border-radius: 50%;
+          border: 1px solid #777;
+          background: none;
+          color: #777;
+          cursor: pointer;
+          transition: 300ms ease opacity;
+          &:hover {
+            opacity: 0.7;
+          }
+        }
+        .chat-menu-content {
+          z-index: 100;
+          position: absolute;
+          top: 100%;
+          right: 100%;
+          width: 150px;
+          background: #fff;
+          padding: 8px;
+          border-radius: 5px;
+          border: 1px solid #8a8a8a;
+          color: #8a8a8a;
+          ul {
+            list-style: none;
+            li {
+              padding: 8px;
+              border-radius: 5px;
+              cursor: pointer;
+              text-transform: uppercase;
+              font-weight: 600;
+              @include vertically-center;
+              transition: 300ms ease background, 300ms ease color;
+              &:hover {
+                background: #eee;
+                color: #ccc;
+              }
+              svg {
+                margin-right: 4px;
+              }
+              div {
+                text-align: center;
+                flex: 1;
+              }
+            }
+          }
         }
       }
     }
     .texts {
-      border: 0.07rem solid #8a8a8a;
-      border-radius: 0.5rem;
-      padding: 0.5rem;
+      border: 1px solid #8a8a8a;
+      border-radius: 8px;
+      padding: 8px;
       overflow-y: auto;
       overflow-x: hidden;
       position: relative;
       &::-webkit-scrollbar {
-        height: 0.25rem;
-        width: 0.25rem;
+        height: 4px;
+        width: 4px;
       }
       &::-webkit-scrollbar-thumb {
         background: #8a8a8a;
-        border-radius: 0.5rem;
+        border-radius: 8px;
       }
       &::-webkit-scrollbar-track {
         background: transparent;
-        border-radius: 0.5rem;
-        padding: 0.5rem 0;
+        border-radius: 8px;
+        padding: 8px 0;
       }
       .text {
-        margin: 0.5rem 0;
+        margin: 8px 0;
         .text-content {
           .text-sender {
             text-align: left;
             font-size: 0.8rem;
-            margin-bottom: 0.25rem;
+            margin-bottom: 4px;
             color: #8a8a8a;
           }
         }
-        width: calc(100% - 1rem);
-        margin-right: 1rem;
+        width: calc(100% - 16px);
+        margin-right: 16px;
         text-align: left;
         .text-content {
           display: inline-block;
-          padding: 0.5rem;
-          border-radius: 0.5rem;
+          padding: 8px;
+          border-radius: 8px;
           border-bottom-left-radius: 0;
           background: #EEE;
           color: #000;
           word-wrap: break-word;
           overflow-wrap: break-word;
           width: auto;
-          max-width: calc(100% - 1rem);
+          max-width: calc(100% - 16px);
           padding-right: 24px !important;
           position: relative;
           .text-tagged {
@@ -111,17 +159,17 @@
           }
         }
         &[is-current-user] {
-          width: calc(100% - 1rem);
-          margin-left: 1rem;
+          width: calc(100% - 16px);
+          margin-left: 16px;
           text-align: right;
           .text-content {
             display: inline-block;
             text-align: left;
-            padding: 0.5rem;
-            border-radius: 0.5rem;
+            padding: 8px;
+            border-radius: 8px;
             border-bottom-right-radius: 0;
             background: #5DADE2;
-            padding-right: 0.5rem !important;
+            padding-right: 8px !important;
             padding-left: 24px !important;
             color: #FFF;
             .text-tagged {
@@ -139,18 +187,19 @@
           .text-createdAt {
             text-align: right;
             font-size: 0.8rem;
-            margin-bottom: 0.25rem;
+            margin-bottom: 4px;
             color: #EEE;
           }
         }
         &[is-from-console] {
-          width: calc(100% - 4rem);
-          margin: 0.5rem 2rem;
+          width: calc(100% - 64px);
+          margin: 8px 32px;
           text-align: center;
           .text-content {
             display: inline-block;
-            padding: 0.25rem;
-            border-radius: 0.5rem;
+            padding: 4px;
+            padding-right: 4px !important;
+            border-radius: 8px;
             background: #EFEFEF;
             color: #333;
             width: 100%;
@@ -209,15 +258,15 @@
           border-top-right-radius: 0;
           border-bottom-right-radius: 0;
           border-right: none;
-          width: calc(100% - 3rem);
+          width: calc(100% - 48px);
         }
         button[type="submit"] {
-          width: 3rem;
+          width: 48px;
           border: none;
           background: #3498DB;
           color: #FFF;
-          border-top-right-radius: 0.5rem;
-          border-bottom-right-radius: 0.5rem;
+          border-top-right-radius: 8px;
+          border-bottom-right-radius: 8px;
           cursor: pointer;
           transition: 300ms ease opacity;
           &:hover {
@@ -230,6 +279,21 @@
 }
 
 body[theme="dark"] {
+  .chat-menu {
+    .chat-menu-content {
+      background: #555 !important;
+      border: 1px solid #8a8a8a !important;
+      color: #8a8a8a !important;
+      ul {
+        li {
+          &:hover {
+            background: #666 !important;
+            color: #333 !important;
+          }
+        }
+      }
+    }
+  }
   .new-text {
     .tagged {
       background: #3f3f3f !important;
