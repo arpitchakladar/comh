@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import './Chat.scss';
 import { CSSTransition } from 'react-transition-group';
-import { FaSignOutAlt, FaArrowRight, FaTag, FaTimes, FaArrowDown, FaEllipsisV } from 'react-icons/fa';
+import { FaSignOutAlt, FaArrowRight, FaTag, FaTimes, FaArrowDown, FaEllipsisV, FaUpload, FaImage, FaVideo } from 'react-icons/fa';
+import { useDispatch } from 'react-redux';
+import { showLoading, hideLoading } from '@/actions/loading';
 import queryString from 'query-string';
 import io from 'socket.io-client';
 import { useHistory } from 'react-router-dom';
@@ -16,20 +18,22 @@ let socket;
 const audio = new Audio(NotifySound);
 audio.volume = 0.3;
 
-let firstScrollToTheBottom = false;
-
 const Chat = ({ location }) => {
   const [texts, setTexts] =  useState(null);
-  const [newText, setNewText] = useState({ text: '', tagged: null });
+  const [newText, setNewText] = useState({ text: '', tagged: null, file: null });
   const [showScrollToTheBottom, setShowScrollToTheBottom] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [uploadMediaType, setUploadMediaType] = useState(null);
+  const [image, setImage] = useState(null);
   const history = useHistory();
   const textsElement = useRef(null);
+  const mediaUploadElement = useRef(null);
   const query = useMemo(() => queryString.parse(location.search), [location.search]);
-  const taggedMessage = useMemo(() => {
+  const taggedText = useMemo(() => {
     if (texts && newText.tagged) return texts.find(text => text._id === newText.tagged);
     else return null;
   }, [newText.tagged]);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     let mounted = true;
@@ -68,6 +72,9 @@ const Chat = ({ location }) => {
         if (mounted) {
           setTexts(state => state ? [...state, text] : [text]);
           audio.play();
+          setTimeout(() => {
+            if ((textsElement.current.clientHeight + textsElement.current.scrollTop) >= (textsElement.current.scrollHeight - 50)) scrollToBottom();
+          }, 100);
         }
       });
 
@@ -75,7 +82,9 @@ const Chat = ({ location }) => {
         setTexts(texts => texts ? [...backup, ...texts] : backup);
       });
 
-      textsElement.current.addEventListener('scroll', () => setShowScrollToTheBottom(textsElement.current.scrollHeight - textsElement.current.scrollTop > 1500));
+      textsElement.current.addEventListener('scroll', () => {
+        setShowScrollToTheBottom(textsElement.current.scrollHeight - textsElement.current.scrollTop > 1500)
+      });
     } else {
       history.push('/');
     }
@@ -88,21 +97,23 @@ const Chat = ({ location }) => {
     };
   }, [query, history]);
 
-  useEffect(() => {
-    if (!firstScrollToTheBottom && texts) {
-      scrollToBottom();
-      firstScrollToTheBottom = true;
-    }
-  }, [texts]);
-
   const scrollToBottom = () => textsElement.current.scroll({ top: textsElement.current.scrollHeight, behavior: 'smooth' });
 
   const handleSubmit = e => {
     e.preventDefault();
 
-    if (newText.text !== '') {
-      socket.emit('sendText', { text: newText.text, tagged: newText.tagged });
-      setNewText({ text: '', tagged: null });
+    if (newText.text) {
+      socket.emit('sendText', { text: newText.text, tagged: newText.tagged, file: newText.file }, ({ error }) => {
+        dispatch(hideLoading());
+        if (error) {
+          Swal.fire('Error', err.message, 'error');
+        }
+        scrollToBottom();
+      });
+      dispatch(showLoading());
+      setNewText({ text: '', tagged: null, file: null });
+    } else {
+      Swal.fire('Error', 'A text is required', 'error');
     }
   };
 
@@ -120,6 +131,40 @@ const Chat = ({ location }) => {
     } else {
       Swal.fire('Error', 'The message was not found', 'error');
     }
+  };
+
+  const handleMediaUpload = e => {
+    const file = mediaUploadElement.current.files[0];
+
+    if (file) {
+      const type = file.type.split('/')[0];
+
+      if (type === 'image') {
+        if (file.size < 1024 * 400) {
+          setUploadMediaType(type);
+  
+          const fr = new FileReader();
+  
+          fr.onload = () => {
+            setNewText(state => ({ ...state, file: { originalname: file.name, buffer: fr.result } }));
+            dispatch(hideLoading());
+          };
+  
+          fr.readAsArrayBuffer(file);
+          dispatch(showLoading());
+        } else {
+          Swal.fire('Error', 'Too big...', 'error');
+          setNewText(state => ({ ...state, file: null }));
+        }
+      } else {
+        Swal.fire('Error', 'Invalid media type', 'error');
+        setNewText(state => ({ ...state, file: null }));
+      }
+    } else setUploadMediaType(null);
+  };
+
+  const showImage = url => {
+    setImage(url);
   };
 
   return (
@@ -150,9 +195,13 @@ const Chat = ({ location }) => {
                         : text.createdAt && <div className="text-createdAt">{timeElapsed(text.createdAt)} ago</div>)}
                     {text.tagged && <div className="text-tagged" onClick={() => scrollToText(text.tagged._id)}>
                       <div className="text-tagged-sender">{text.tagged.sender}</div>
-                      <div className="text-tagged-content">{text.tagged.text}</div>
+                      <div className="text-tagged-content">
+                        {text.tagged.image && <img src={text.tagged.image} alt="image" className="text-tagged-image" />}
+                        <div className="text-tagged-content-text">{text.tagged.text}</div>
+                      </div>
                     </div>}
-                    <Linkify>{text.text}</Linkify>
+                    {text.image && <img src={text.image} alt="image" className="text-image" onClick={() => showImage(text.image)} />}
+                    <div className="text-content-text"><Linkify>{text.text}</Linkify></div>
                     {text.sender &&
                       <button className="tag" onClick={() => handleTag(text._id)}>
                         <FaTag />
@@ -169,16 +218,23 @@ const Chat = ({ location }) => {
           }
         </div>
         <form className="new-text" onSubmit={handleSubmit} autoComplete="off">
-          {taggedMessage && <div className="tagged">
-              <div className="text" key={taggedMessage._id} is-current-user={query.name === taggedMessage.sender}>
+          {taggedText && <div className="tagged">
+              <div className="text" key={taggedText._id} is-current-user={query.name === taggedText.sender}>
                 <div className="text-content">
-                  {taggedMessage.sender && <div className="text-sender">{taggedMessage.sender}</div>}
-                  <div className="text-message"><Linkify>{taggedMessage.text}</Linkify></div>
+                  {taggedText.sender && <div className="text-sender">{taggedText.sender}</div>}
+                  <div className="text-message">
+                    {taggedText.image && <img src={taggedText.image} alt="image" className="text-tagged-image" />}
+                    <div className="text-message-text">{taggedText.text}</div>
+                  </div>
                   <button className="cancel" type="button" onClick={() => setNewText(state => ({ ...state, tagged: null }))}><FaTimes /></button>
                 </div>
               </div>
           </div>}
           <div className="new-text-fields">
+            <input type="file" id="upload-media-input" accept="image/*" onChange={handleMediaUpload} ref={mediaUploadElement} />
+            <label htmlFor="upload-media-input" className="upload-media">
+              {uploadMediaType === 'image' ? <FaImage /> : <FaUpload />}
+            </label>
             <input type="text" value={newText.text} onChange={e => setNewText(state => ({...state, text: e.target.value}))} />
             <button type="submit">
               <FaArrowRight />
@@ -186,6 +242,13 @@ const Chat = ({ location }) => {
           </div>
         </form>
       </div>
+      <CSSTransition in={!!image} timeout={600} classNames="loading-fade" unmountOnExit={true}>
+        <div className="show-image" onClick={() => showImage(null)}>
+          <div className="image" onClick={() => showImage(state => state)}>
+            <img src={image} alt=""/>
+          </div>
+        </div>
+      </CSSTransition>
     </div>
   );
 };

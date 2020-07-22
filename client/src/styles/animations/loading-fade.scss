@@ -1,0 +1,16 @@
+@keyframes loading-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.5;
+  }
+}
+
+.loading-fade-enter-active {
+  animation: 650ms linear loading-fade;
+}
+
+.loading-fade-exit-active {
+  animation: 650ms linear loading-fade reverse;
+}

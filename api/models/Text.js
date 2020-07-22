@@ -5,7 +5,6 @@ const TextSchema = mongoose.Schema({
 		type: String,
 		required: true
 	},
-	tagged: mongoose.Schema.Types.ObjectId,
 	sender: {
 		type: String,
 		required: true
@@ -13,7 +12,9 @@ const TextSchema = mongoose.Schema({
 	room: {
 		type: String,
 		required: true
-	}
+	},
+	tagged: mongoose.Schema.Types.ObjectId,
+	image: String
 }, { timestamps: { createdAt: true, updatedAt: false } });
 
 TextSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 7 });

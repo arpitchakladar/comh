@@ -12,6 +12,8 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "file-type": "^14.6.2",
+    "ibm-cos-sdk": "^1.6.1",
     "mongoose": "^5.9.20",
     "socket.io": "^2.3.0"
   },

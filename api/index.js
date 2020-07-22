@@ -23,10 +23,12 @@ app.get('/whatsnew', mainController.getWhatsNew);
 
 app.post('/whatsnew', mainController.addWhatsNew);
 
+app.get('/media/:key', mainController.getFile);
+
 io.on('connection', socket => {
   socket.on('join', ({ name, room }, callback) => mainController.join(socket, { name, room }, callback));
 
-  socket.on('sendText', data => mainController.sendText(io, socket, data));
+  socket.on('sendText', (data, callback) => mainController.sendText(io, socket, data, callback));
 
   socket.on('disconnect', () => mainController.disconnect(socket));
 });

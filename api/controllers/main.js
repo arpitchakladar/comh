@@ -1,6 +1,8 @@
 const Text = require('../models/Text');
 const User = require('../models/User');
 const WhatsNew = require('../models/WhatsNew');
+const storage = require('../storage');
+const FileType = require('file-type');
 
 exports.join = async (socket, { name, room }, callback) => {
   if (await User.exists({ name, room })) return callback({ error: { message: `A user with the name of ${name} already exists in ${room}` } });
@@ -44,9 +46,13 @@ exports.join = async (socket, { name, room }, callback) => {
   callback({});
 };
 
-exports.sendText = async (io, socket, { text, tagged }) => {
+exports.sendText = async (io, socket, { text, tagged, file }, callback) => {
 	if (text) {
-	  const user = await User.findOne({ _id: socket.id });
+    const user = await User.findOne({ _id: socket.id });
+
+    if (!user) {
+      return callback({ message: 'Your account was not found in the room' });
+    }
 
 	  const _text = new Text({
 	  	text,
@@ -54,20 +60,34 @@ exports.sendText = async (io, socket, { text, tagged }) => {
       room: user.room
     });
 
+    if (file && file.originalname && file.buffer) {
+      const type = (await FileType.fromBuffer(file.buffer)).mime.split('/')[0];
+      if (type === 'image') {
+        if (file.buffer.byteLength > 1024 * 400) {
+          return callback({ error: { message: 'File too big' } });
+        }
+        _text.image = await storage.addItem(file);
+      } else {
+        return callback({ error: { message: 'Invalid file type' } });
+      }
+    }
+
     const responseText = _text.toObject();
 
     if (tagged) {
       const taggedText = await Text.findOne({ _id: tagged });
-      responseText.tagged = taggedText;
-      if (!taggedText) {
-        return;
+      if (!taggedText || taggedText.room !== user.room) {
+        return callback({ message: 'Not found the text to tag' });
       }
+      responseText.tagged = taggedText;
       _text.tagged = tagged;
     }
 
     await _text.save();
 
-	  io.to(user.room).emit('text', { text: responseText });
+    io.to(user.room).emit('text', { text: responseText });
+
+    return callback({});
 	}
 };
 
@@ -107,3 +127,11 @@ exports.addWhatsNew = async (req, res) => {
 };
 
 exports.getWhatsNew = async (req, res) => res.json({ whatsnew: (await WhatsNew.find({}, {}, { sort: { createdAt: 1 } })).filter(w => w.createdAt > (Date.now() - (1000 * 60 * 60 * 24 * 7))) });
+
+exports.getFile = async (req, res) => {
+  const buffer = await storage.getItem(req.params.key);
+
+  res.contentType((await FileType.fromBuffer(buffer)).mime);
+
+  return res.send(buffer);
+};
