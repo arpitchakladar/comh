@@ -141,8 +141,8 @@ const Chat = ({ location }) => {
         <div className="texts" ref={textsElement}>
           {texts
             ? <>
-                {texts.map((text, i) => 
-                <div className="text fade-enter-active" id={i} key={text._id} is-current-user={query.name === text.sender} is-from-console={!text.sender}>
+                {texts.map(text => 
+                <div className="text fade-enter-active" id={text._id} key={text._id} is-current-user={query.name === text.sender} is-from-console={!text.sender}>
                   <div className="text-content">
                     {text.sender &&
                       (query.name !== text.sender
@@ -154,7 +154,7 @@ const Chat = ({ location }) => {
                     </div>}
                     <Linkify>{text.text}</Linkify>
                     {text.sender &&
-                      <button className="tag" onClick={() => handleTag(i)}>
+                      <button className="tag" onClick={() => handleTag(text._id)}>
                         <FaTag />
                       </button>}
                   </div>
