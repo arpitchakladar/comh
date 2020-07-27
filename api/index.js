@@ -1,36 +1,50 @@
 const express = require('express');
-const socketio = require('socket.io');
-const http = require('http');
 
 if (process.env.NODE_ENV !== 'production') require('dotenv').config();
-require('./db').connect();
-
-const mainController = require('./controllers/main');
-
-const PORT = process.env.PORT || 4200;
+require('./utils/db').connect();
 
 const app = express();
+
+app.use(require('helmet')());
 app.use(require('cors')());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-const server = http.createServer(app);
-const io = socketio(server).sockets;
+const server = require('http').createServer(app);
+const io = require('socket.io')(server).sockets;
+
+const chatControllers = require('./controllers/chat');
+const whatsNewController = require('./controllers/whatsNew');
+const fileController = require('./controllers/file');
 
 app.get('/', (req, res) => res.send('Comh API.'));
 
-app.get('/whatsnew', mainController.getWhatsNew);
+app.get('/whatsnew', whatsNewController.getWhatsNew);
 
-app.post('/whatsnew', mainController.addWhatsNew);
+app.post('/whatsnew', whatsNewController.addWhatsNew);
 
-app.get('/media/:key', mainController.getFile);
+app.get('/file/:key', fileController.getFile);
 
 io.on('connection', socket => {
-  socket.on('join', ({ name, room }, callback) => mainController.join(socket, { name, room }, callback));
+  socket.on('join', ({ name, room }, callback) => chatControllers.join(socket, { name, room }, callback));
 
-  socket.on('sendText', (data, callback) => mainController.sendText(io, socket, data, callback));
+  socket.on('sendText', (data, callback) => chatControllers.sendText(io, socket, data, callback));
 
-  socket.on('disconnect', () => mainController.disconnect(socket));
+  socket.on('deleteText', (data, callback) => chatControllers.deleteText(io, socket, data, callback));
+
+  socket.on('disconnect', () => chatControllers.disconnect(socket));
 });
 
-server.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+app.use((req, res, next) => {
+  return next({ message: 'Not found', statusCode: 404 });
+});
+
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+
+  res.status(statusCode);
+
+  return res.json({ error: { message: err.message || 'Internal server error', statusCode } });
+});
+
+module.exports = server;

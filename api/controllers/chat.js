@@ -1,13 +1,14 @@
 const Text = require('../models/Text');
 const User = require('../models/User');
-const WhatsNew = require('../models/WhatsNew');
-const storage = require('../storage');
+const storage = require('../utils/storage');
 const FileType = require('file-type');
 
 exports.join = async (socket, { name, room }, callback) => {
+  if (!name || !room) return callback({ name: 'Invalid name or room' });
+
   if (await User.exists({ name, room })) return callback({ error: { message: `A user with the name of ${name} already exists in ${room}` } });
 
-  const user = await new User({ _id: socket.id, name, room });
+  const user = new User({ _id: socket.id, name, room });
 
   try {
     await user.validate();
@@ -38,6 +39,7 @@ exports.join = async (socket, { name, room }, callback) => {
   }
 
   socket.emit('text', { text: { text: `Welcome, ${name} to ${room}` } });
+
   socket.broadcast.to(room).emit('text', { text: { text: `${name} has joined the chat` } });
 
   socket.join(room);
@@ -48,10 +50,12 @@ exports.join = async (socket, { name, room }, callback) => {
 
 exports.sendText = async (io, socket, { text, tagged, file }, callback) => {
 	if (text) {
+    if (text.length > 255) return callback({ error: { message: 'Text can\'t be more then 255 charaters long' } });
+
     const user = await User.findOne({ _id: socket.id });
 
     if (!user) {
-      return callback({ message: 'Your account was not found in the room' });
+      return callback({ error: { message: 'Your account was not found in the room' } });
     }
 
 	  const _text = new Text({
@@ -63,8 +67,8 @@ exports.sendText = async (io, socket, { text, tagged, file }, callback) => {
     if (file && file.originalname && file.buffer) {
       const type = (await FileType.fromBuffer(file.buffer)).mime.split('/')[0];
       if (type === 'image') {
-        if (file.buffer.byteLength > 1024 * 400) {
-          return callback({ error: { message: 'File too big' } });
+        if (file.buffer.byteLength > 1024 * 2028) {
+          return callback({ error: { message: 'File too big...' } });
         }
         _text.image = await storage.addItem(file);
       } else {
@@ -77,9 +81,9 @@ exports.sendText = async (io, socket, { text, tagged, file }, callback) => {
     if (tagged) {
       const taggedText = await Text.findOne({ _id: tagged });
       if (!taggedText || taggedText.room !== user.room) {
-        return callback({ message: 'Not found the text to tag' });
+        return callback({ error: { message: 'The text you tagged was not found or was deleted' } });
       }
-      responseText.tagged = taggedText;
+      responseText.tagged = taggedText.toObject();
       _text.tagged = tagged;
     }
 
@@ -89,6 +93,28 @@ exports.sendText = async (io, socket, { text, tagged, file }, callback) => {
 
     return callback({});
 	}
+};
+
+exports.deleteText = async (io, socket, { _id }, callback) => {
+  if (_id) {
+    const user = await User.findOne({ _id: socket.id });
+
+    if (!user) return callback({ error: { message: 'Your account was not found' } });
+
+    const text = await Text.findOne({ _id });
+
+    if (!text) return callback({ error: { message: 'The text was not found or it is already deleted' } });
+
+    if (text.room !== user.room) return callback({ error: { message: 'The text was not found in the current room' } });
+
+    if (text.sender !== user.name) return callback({ error: { message: 'You can only delete your own text' } });
+
+    await text.remove();
+
+    io.to(user.room).emit('deletedText', { _id });
+
+    return callback({});
+  }
 };
 
 exports.disconnect = async socket => {
@@ -103,35 +129,4 @@ exports.disconnect = async socket => {
   await User.deleteOne({ _id: user._id });
 
   console.log(`A user from "${user.room}" and with the name of "${user.name}" has left`);
-};
-
-exports.addWhatsNew = async (req, res) => {
-  if (!req.body.password) {
-    res.status(401);
-    return res.json({ error: { message: 'Password is required', statusCode: 401 } });
-  }
-
-  if (!req.body.description) {
-    res.status(400);
-    return res.json({ error: { message: 'Description is required', statusCode: 400 } });
-  }
-
-  if (process.env.ADMIN_PASSWORD !== req.body.password) {
-    res.status(401);
-    return res.json({ error: { message: 'Password dosen\'t match', statusCode: 401 } });
-  }
-
-  await WhatsNew.create({ description: req.body.description });
-
-  return res.json({ message: 'Successfully added whats new' });
-};
-
-exports.getWhatsNew = async (req, res) => res.json({ whatsnew: (await WhatsNew.find({}, {}, { sort: { createdAt: 1 } })).filter(w => w.createdAt > (Date.now() - (1000 * 60 * 60 * 24 * 7))) });
-
-exports.getFile = async (req, res) => {
-  const buffer = await storage.getItem(req.params.key);
-
-  res.contentType((await FileType.fromBuffer(buffer)).mime);
-
-  return res.send(buffer);
 };

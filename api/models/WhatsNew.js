@@ -7,4 +7,6 @@ const WhatsNewSchema = mongoose.Schema({
   }
 }, { timestamps: { createdAt: true, updatedAt: false } });
 
+WhatsNewSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 7 });
+
 module.exports = mongoose.model('whatsnew', WhatsNewSchema);

@@ -2,10 +2,10 @@
   "name": "comh-api",
   "version": "1.0.0",
   "description": "API for Comh.",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "author": "Spyro",
   "license": "MIT",
@@ -13,6 +13,7 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "file-type": "^14.6.2",
+    "helmet": "^3.23.3",
     "ibm-cos-sdk": "^1.6.1",
     "mongoose": "^5.9.20",
     "socket.io": "^2.3.0"

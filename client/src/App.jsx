@@ -30,14 +30,14 @@ const App = () => {
       <div className="toggle-theme">
         <button onClick={handleToggleTheme}>{theme !== 'light' ? 'light mode' : 'dark mode'}</button>
       </div>
-      <CSSTransition in={loading} timeout={600} classNames="loading-fade" unmountOnExit={true}>
+      <CSSTransition in={loading} timeout={300} classNames="loading-fade" unmountOnExit={true}>
         <div className="loading-backdrop">
-          <img src={LoadingGif} alt="" className="Loading"/>
+          <img src={LoadingGif} alt="Loading..." className="Loading"/>
         </div>
       </CSSTransition>
       <Route render={({ location }) =>
         <TransitionGroup className="Views-Content">
-          <CSSTransition key={location.key} timeout={600} classNames="route-fade">
+          <CSSTransition key={location.key} timeout={300} classNames="route-fade">
             <Switch location={location}>
               <Route path="/" exact component={Join} />
               <Route path="/chat" component={Chat} />

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FaSignInAlt } from 'react-icons/fa';
 import { useSelector, useDispatch } from 'react-redux';
 import { setWhatsNews } from '@/actions/whatsNew';
 import './Join.scss';
 import Swal from 'sweetalert2';
+import queryString from 'query-string';
 import { useHistory } from 'react-router-dom';
 import Linkify from 'react-linkify';
 import timeElapsed from '@/methods/timeElapsed';
@@ -20,6 +21,7 @@ const Join = () => {
     room: ''
   });
   const history = useHistory();
+  const query = useMemo(() => queryString.parse(location.search), [location.search]);
   const whatsNew = useSelector(state => state.whatsNew);
   const dispatch = useDispatch();
 
@@ -28,11 +30,22 @@ const Join = () => {
 
     document.title = "Comh";
 
-    const previousRoom = localStorage.getItem('room');
-    const previousName = localStorage.getItem('name');
+    if (query.room || query.name) {
+      setFormData(state => {
+        const newState = { ...state, room: query.room };
 
-    if (previousRoom && previousName) {
-      setFormData({ name: previousName, room: previousRoom });
+        if (query.room) newState.room = query.room;
+        if (query.name) newState.name = query.name;
+
+        return newState;
+      });
+    } else {
+      const previousRoom = localStorage.getItem('room');
+      const previousName = localStorage.getItem('name');
+  
+      if (previousRoom && previousName) {
+        setFormData({ name: previousName, room: previousRoom });
+      }
     }
 
     if (!whatsNew) {
@@ -66,7 +79,7 @@ const Join = () => {
     }
     setFormErrors(errors);
     if (Object.values(errors).every(error => error === '')) {
-      history.push(`/chat?name=${formData.name}&room=${formData.room}`);
+      history.push(`/chat?name=${formData.name.trim()}&room=${formData.room.trim()}`);
     } else {
       Swal.fire('Error', 'Invalid form.', 'error');
     }
@@ -75,9 +88,9 @@ const Join = () => {
   return (
     <div className="Join">
       <form onSubmit={handleSubmit} autoComplete="off">
-        <input type="text" name="name" placeholder="Name" invalid={!!formErrors.name} value={formData.name} onChange={handleChange} onBlur={handleBlur} />
+        <input type="text" maxLength="32" name="name" placeholder="Name" invalid={!!formErrors.name} value={formData.name} onChange={handleChange} onBlur={handleBlur} />
         {formErrors.name !== '' && <div className="validation-error">{formErrors.name}</div>}
-        <input type="text" name="room" placeholder="Room" invalid={!!formErrors.room} value={formData.room} onChange={handleChange} onBlur={handleBlur} />
+        <input type="text" maxLength="50" name="room" placeholder="Room" invalid={!!formErrors.room} value={formData.room} onChange={handleChange} onBlur={handleBlur} />
         {formErrors.room !== '' && <div className="validation-error">{formErrors.room}</div>}
         <button type="submit">
           <FaSignInAlt />
@@ -95,8 +108,7 @@ const Join = () => {
             : <div className="nothing-new">
               <div>No new updates in the last week</div>
             </div>
-          : <img src={LoadingGif} alt="" className="Loading" />
-        }
+          : <img src={LoadingGif} alt="" className="Loading" />}
       </div>
     </div>
   );
