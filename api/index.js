@@ -10,6 +10,12 @@ app.use(require('cors')());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+app.use(require('express-rate-limit')({
+  windowMs: 10000,
+  max: 50,
+  message: { error: { message: 'Too many requests at one time. Please try again after 10 seconds.' } }
+}));
+
 const server = require('http').createServer(app);
 const io = require('socket.io')(server).sockets;
 
@@ -40,11 +46,9 @@ app.use((req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
+  res.status(err.statusCode || 500);
 
-  res.status(statusCode);
-
-  return res.json({ error: { message: err.message || 'Internal server error', statusCode } });
+  return res.json({ error: { message: err.message || 'Internal server error' } });
 });
 
 module.exports = server;
