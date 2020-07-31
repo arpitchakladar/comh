@@ -3,6 +3,7 @@ import './Chat.scss';
 import { CSSTransition } from 'react-transition-group';
 import { FaSignOutAlt, FaArrowRight, FaTag, FaTimes, FaArrowDown, FaEllipsisV, FaUpload, FaImage } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
+import { Img } from 'react-image';
 import { showLoading, hideLoading } from '@/actions/loading';
 import queryString from 'query-string';
 import io from 'socket.io-client';
@@ -240,11 +241,11 @@ const Chat = ({ location }) => {
                     {text.tagged && <div className="text-tagged" onClick={() => scrollToText(text.tagged._id)}>
                       <div className="text-tagged-sender">{text.tagged.sender}</div>
                       <div className="text-tagged-content">
-                        {text.tagged.image && <img src={text.tagged.image} alt="image" className="text-tagged-image" />}
+                        {text.tagged.image && <Img loader={<img src={LoadingGif} alt="Loading..." className="image-loader" />} src={text.tagged.image} alt="" className="text-tagged-image" />}
                         <div className="text-tagged-content-text">{text.tagged.text}</div>
                       </div>
                     </div>}
-                    {text.image && <img src={text.image} alt="image" className="text-image" onClick={() => setImage(text.image)} />}
+                    {text.image && <Img loader={<img src={LoadingGif} alt="Loading..." className="image-loader" />} src={text.image} alt="" className="text-image" onClick={() => setImage(text.image)} />}
                     <div className="text-content-text"><Linkify>{text.text}</Linkify></div>
                     {text.sender &&<div className="text-menu">
                       <button className="text-menu-toggle" type="button" onClick={() => handleToggleTextMenu(text._id)} onBlur={() => handleToggleTextMenu(text._id, true)}><FaEllipsisV /></button>
@@ -274,7 +275,7 @@ const Chat = ({ location }) => {
                 <div className="text-content">
                   {taggedText.sender && <div className="text-sender">{taggedText.sender}</div>}
                   <div className="text-message">
-                    {taggedText.image && <img src={taggedText.image} alt="image" className="text-tagged-image" />}
+                    {taggedText.image && <Img loader={<img src={LoadingGif} alt="Loading..." className="image-loader" />} src={taggedText.image} alt="" className="text-tagged-image" />}
                     <div className="text-message-text">{taggedText.text}</div>
                   </div>
                   <button className="cancel" type="button" onClick={() => setNewText(state => ({ ...state, tagged: null }))}><FaTimes /></button>
@@ -297,7 +298,7 @@ const Chat = ({ location }) => {
         <div className="show-image">
           <button className="close" onClick={() => setImage(null)}><FaTimes /></button>
           <div className="image">
-            <img src={image} alt=""/>
+            <Img loader={<img src={LoadingGif} alt="Loading..." className="image-loader" />} src={image} alt=""/>
           </div>
         </div>
       </CSSTransition>

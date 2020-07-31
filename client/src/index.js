@@ -6,6 +6,8 @@ import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import store from '@/reducers';
 
+import 'preact/devtools';
+
 window.API_URL = 'https://comh-api.herokuapp.com';
 
 ReactDOM.render(
