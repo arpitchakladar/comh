@@ -5,3 +5,4 @@ api/.gitignore
 client/node_modules
 client/.vercel
 client/.gitignore
+client/build
