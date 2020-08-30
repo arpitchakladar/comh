@@ -15,6 +15,7 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-args: '--prod'
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           working-directory: ./client
 
   deploy-api:
@@ -24,6 +25,6 @@ jobs:
       - uses: akhileshns/heroku-deploy@v3.4.6
         with:
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-          heroku_app_name: comh-api #Must be unique in Heroku
+          heroku_app_name: comh-api
           heroku_email: ${{ secrets.HEROKU_EMAIL }}
           appdir: ./api

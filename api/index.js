@@ -20,14 +20,9 @@ const server = require('http').createServer(app);
 const io = require('socket.io')(server).sockets;
 
 const chatControllers = require('./controllers/chat');
-const whatsNewController = require('./controllers/whatsNew');
 const fileController = require('./controllers/file');
 
 app.get('/', (req, res) => res.send('Comh API.'));
-
-app.get('/whatsnew', whatsNewController.getWhatsNew);
-
-app.post('/whatsnew', whatsNewController.addWhatsNew);
 
 app.get('/file/:key', fileController.getFile);
 
