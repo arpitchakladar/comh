@@ -1,15 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { FaSignInAlt } from 'react-icons/fa';
-import { useSelector, useDispatch } from 'react-redux';
-import { setWhatsNews } from '@/actions/whatsNew';
 import './Join.scss';
 import Swal from 'sweetalert2';
 import queryString from 'query-string';
 import { useHistory } from 'react-router-dom';
-import Linkify from 'react-linkify';
-import timeElapsed from '@/methods/timeElapsed';
 import validators from '@/validators/validateUser';
-import LoadingGif from '@/assets/loading.gif';
 
 const Join = () => {
   const [formData, setFormData] = useState({
@@ -22,8 +17,6 @@ const Join = () => {
   });
   const history = useHistory();
   const query = useMemo(() => queryString.parse(location.search), [location.search]);
-  const whatsNew = useSelector(state => state.whatsNew);
-  const dispatch = useDispatch();
 
   useEffect(() => {
     let mounted = true;
@@ -46,16 +39,6 @@ const Join = () => {
       if (previousRoom && previousName) {
         setFormData({ name: previousName, room: previousRoom });
       }
-    }
-
-    if (!whatsNew) {
-      fetch(`${window.API_URL}/whatsnew`, { method: 'get' })
-        .then(res => res.json())
-        .then(body => {
-          if (mounted) {
-            if (body && body.whatsnew) dispatch(setWhatsNews(body.whatsnew));
-          }
-        });
     }
 
     return () => mounted = false;
@@ -97,19 +80,6 @@ const Join = () => {
           <span>join</span>
         </button>
       </form>
-      <div data-is-loading={!whatsNew} className="whats-new">
-        <div className="header">Whats New</div>
-        {whatsNew
-          ? whatsNew.length
-            ? whatsNew.map(w => <div className="description" key={w._id}>
-              <div className="time-elapsed">added {timeElapsed(w.createdAt)} ago</div>
-              <div className="description-content"><Linkify>{w.description}</Linkify></div>
-            </div>)
-            : <div className="nothing-new">
-              <div>No new updates in the last week</div>
-            </div>
-          : <img src={LoadingGif} alt="" className="Loading" />}
-      </div>
     </div>
   );
 };
