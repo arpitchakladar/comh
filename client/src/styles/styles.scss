@@ -1,14 +1,14 @@
 @mixin vertically-center {
-  display: flex;
-  align-items: center;
+	display: flex;
+	align-items: center;
 }
 
 @mixin image-cover {
-  object-fit: cover;
-  object-position: center;
+	object-fit: cover;
+	object-position: center;
 }
 
 @mixin break-word {
-  word-wrap: break-word;
-  overflow-wrap: break-word;
+	word-wrap: break-word;
+	overflow-wrap: break-word;
 }

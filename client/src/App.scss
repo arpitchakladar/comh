@@ -1,79 +1,79 @@
 @import '@/styles/styles.scss';
 
 .App {
-  .validation-error {
-    color: #E74C3C;
-    font-size: 0.9rem;
-    margin-top: -1rem;
-    margin-bottom: 1rem;
-    text-align: left;
-  }
-  input {
-    display: block;
-    font-size: 1rem;
-    border-radius: 0.5rem;
-    padding: 0.5rem;
-    border: 0.07rem solid #8a8a8a;
-    transition: 300ms ease-in background, 300ms ease-in color;
-    &[invalid] {
-      border-color: #E74C3C !important;
-    }
-  }
-  .loading-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 200;
-    height: 100vh;
-    width: 100vw;
-    opacity: 0.5;
-    background: #333;
-  }
-  .Loading {
-    width: 100%;
-    max-width: 5rem;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-  .toggle-theme {
-    width: 100%;
-    text-align: right;
-    padding: 2px 4px;
-    position: fixed;
-    top: 0;
-    right: 0;
-    button {
-      padding: 4px;
-      border-radius: 5px;
-      border: none;
-      text-transform: uppercase;
-      font-weight: 600;
-      font-size: 0.8rem;
-      cursor: pointer;
-      color: #333;
-      transition: 300ms ease-in opacity;
-      opacity: 0.5;
-      &:hover {
-        opacity: 1;
-      }
-    }
-  }
+	.validation-error {
+		color: #E74C3C;
+		font-size: 0.9rem;
+		margin-top: -1rem;
+		margin-bottom: 1rem;
+		text-align: left;
+	}
+	input {
+		display: block;
+		font-size: 1rem;
+		border-radius: 0.5rem;
+		padding: 0.5rem;
+		border: 0.07rem solid #8a8a8a;
+		transition: 300ms ease-in background, 300ms ease-in color;
+		&[invalid] {
+			border-color: #E74C3C !important;
+		}
+	}
+	.loading-backdrop {
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 200;
+		height: 100vh;
+		width: 100vw;
+		opacity: 0.5;
+		background: #333;
+	}
+	.Loading {
+		width: 100%;
+		max-width: 5rem;
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+	}
+	.toggle-theme {
+		width: 100%;
+		text-align: right;
+		padding: 2px 4px;
+		position: fixed;
+		top: 0;
+		right: 0;
+		button {
+			padding: 4px;
+			border-radius: 5px;
+			border: none;
+			text-transform: uppercase;
+			font-weight: 600;
+			font-size: 0.8rem;
+			cursor: pointer;
+			color: #333;
+			transition: 300ms ease-in opacity;
+			opacity: 0.5;
+			&:hover {
+				opacity: 1;
+			}
+		}
+	}
 }
 
 body[theme="dark"] {
-  .App {
-    color: #888;
-    button {
-      background: #555;
-    }
-    .loading-backdrop {
-      background: #ddd;
-    }
-    input {
-      background: #333;
-      color: #888;
-    }
-  }
+	.App {
+		color: #888;
+		button {
+			background: #555;
+		}
+		.loading-backdrop {
+			background: #ddd;
+		}
+		input {
+			background: #333;
+			color: #888;
+		}
+	}
 }

@@ -17,7 +17,8 @@ module.exports = {
 	},
 
 	optimization: {
-    minimize: false
+		minimize: false,
+		noEmitOnErrors: true
   },
 
 	resolve: {
@@ -55,10 +56,6 @@ module.exports = {
 				})
 			},
 			{
-				test: /\.json$/,
-				use: 'json-loader'
-			},
-			{
 				test: /\.(xml|html|txt|md)$/,
 				use: 'raw-loader'
 			},
@@ -69,14 +66,14 @@ module.exports = {
 		]
 	},
 	plugins: ([
-		new webpack.NoEmitOnErrorsPlugin(),
 		new ExtractTextPlugin({
 			filename: 'style.css',
 			allChunks: true,
 			disable: false
 		}),
 		new webpack.DefinePlugin({
-			'process.env.NODE_ENV': JSON.stringify(ENV)
+			'ENV': JSON.stringify(ENV),
+			'COMH_API_URI': JSON.stringify(ENV == 'production' ? 'https://comh-api.herokuapp.com' : 'http://localhost:8081')
 		}),
 		new HtmlWebpackPlugin({
 			template: path.join(__dirname, 'public', 'index.html'),

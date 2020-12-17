@@ -1,121 +1,121 @@
 @import '@/styles/styles.scss';
 
 .Join {
-  padding: calc(8% + 8px) 8px;
-  .whats-new {
-    width: 100%;
-    max-width: 400px;
-    padding: 32px;
-    position: relative;
-    border-radius: 8px;
-    border: 0.07rem solid #8a8a8a;
-    &[data-is-loading="true"] {
-      min-height: 240px;
-    }
-    .header {
-      text-align: center;
-      font-size: 1.5rem;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-    & > .description {
-      opacity: 0.8;
-      margin: 8px 0;
-      border-radius: 10px;
-      border: 1px solid #8a8a8a;
-      padding: 10px;
-      .time-elapsed {
-        font-size: 0.7rem;
-        color: #555;
-      }
-      .description-content {
-        color: #222;
-        font-size: 1rem;
-      }
-    }
-    .nothing-new {
-      text-align: center;
-      margin: 0 16px;
-    }
-    margin: 0 auto;
-    margin-top: 16px;
-  }
-  form {
-    width: 100%;
-    max-width: 400px;
-    padding: 32px;
-    border-radius: 8px;
-    border: 1px solid #8a8a8a;
-    margin: 0 auto;
-    @media (max-width: 20rem) {
-      padding: 16px;
-    } 
-  }
-  button[type="submit"] {
-    padding: 6.4px;
-    background: #5DADE2;
-    border: 1px solid #5DADE2;
-    color: #FFF;
-    cursor: pointer;
-    transition: 300ms ease background, 300ms ease color;
-    font-weight: 600;
-    text-transform: uppercase;
-    @include vertically-center;
-    justify-content: center;
-    svg {
-      margin-right: 8px;
-    }
-    span {
-      display: inline-block;
-      max-width: calc(100% - 24px);
-      @include break-word;
-    }
-    &:hover {
-      background: #FFF;
-      color: #5DADE2;
-    }
-  }
-  button[type="submit"] {
-    width: 100%;
-    display: block;
-    font-size: 1rem;
-    border-radius: 8px;
-  }
-  input {
-    width: 100%;
-    margin-bottom: 16px;
-  }
+	padding: calc(8% + 8px) 8px;
+	.whats-new {
+		width: 100%;
+		max-width: 400px;
+		padding: 32px;
+		position: relative;
+		border-radius: 8px;
+		border: 0.07rem solid #8a8a8a;
+		&[data-is-loading="true"] {
+			min-height: 240px;
+		}
+		.header {
+			text-align: center;
+			font-size: 1.5rem;
+			margin-bottom: 8px;
+			text-transform: uppercase;
+			font-weight: 600;
+		}
+		& > .description {
+			opacity: 0.8;
+			margin: 8px 0;
+			border-radius: 10px;
+			border: 1px solid #8a8a8a;
+			padding: 10px;
+			.time-elapsed {
+				font-size: 0.7rem;
+				color: #555;
+			}
+			.description-content {
+				color: #222;
+				font-size: 1rem;
+			}
+		}
+		.nothing-new {
+			text-align: center;
+			margin: 0 16px;
+		}
+		margin: 0 auto;
+		margin-top: 16px;
+	}
+	form {
+		width: 100%;
+		max-width: 400px;
+		padding: 32px;
+		border-radius: 8px;
+		border: 1px solid #8a8a8a;
+		margin: 0 auto;
+		@media (max-width: 20rem) {
+			padding: 16px;
+		} 
+	}
+	button[type="submit"] {
+		padding: 6.4px;
+		background: #5DADE2;
+		border: 1px solid #5DADE2;
+		color: #FFF;
+		cursor: pointer;
+		transition: 300ms ease background, 300ms ease color;
+		font-weight: 600;
+		text-transform: uppercase;
+		@include vertically-center;
+		justify-content: center;
+		svg {
+			margin-right: 8px;
+		}
+		span {
+			display: inline-block;
+			max-width: calc(100% - 24px);
+			@include break-word;
+		}
+		&:hover {
+			background: #FFF;
+			color: #5DADE2;
+		}
+	}
+	button[type="submit"] {
+		width: 100%;
+		display: block;
+		font-size: 1rem;
+		border-radius: 8px;
+	}
+	input {
+		width: 100%;
+		margin-bottom: 16px;
+	}
 }
 
 body[theme="dark"] {
-  .Join {
-    button[type="submit"] {
-      background: #777;
-      border: 1px solid #777;
-      color: #333;
-      &:hover {
-        background: #333;
-        color: #777;
-      }
-    }
+	.Join {
+		button[type="submit"] {
+			background: #777;
+			border: 1px solid #777;
+			color: #333;
+			&:hover {
+				background: #333;
+				color: #777;
+			}
+		}
 
-    .whats-new {
-      & > .description {
-        opacity: 0.8;
-        margin: 8px 0;
-        border-radius: 10px;
-        border: 1px solid #8a8a8a;
-        padding: 10px;
-        .time-elapsed {
-          font-size: 0.7rem;
-          color: #888;
-        }
-        .description-content {
-          color: #999;
-          font-size: 1rem;
-        }
-      }
-    }
-  }
+		.whats-new {
+			& > .description {
+				opacity: 0.8;
+				margin: 8px 0;
+				border-radius: 10px;
+				border: 1px solid #8a8a8a;
+				padding: 10px;
+				.time-elapsed {
+					font-size: 0.7rem;
+					color: #888;
+				}
+				.description-content {
+					color: #999;
+					font-size: 1rem;
+				}
+			}
+		}
+	}
 }

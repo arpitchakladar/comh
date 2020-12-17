@@ -1,36 +1,36 @@
 export default time => {
-  const Etime = Date.now() - Date.parse(time);
+	const elapsedTime = Date.now() - Date.parse(time);
 
-  let t = 12 * 30 * 24 * 60 * 60 * 1000;
+	let t = 12 * 30 * 24 * 60 * 60 * 1000;
 
-  if (Etime > t) {
-    return `${Math.floor(Etime / t)} years`;
-  }
+	if (elapsedTime > t) {
+		return `${Math.floor(elapsedTime / t)} years`;
+	}
 
-  t /= 12;
-  if (Etime > t) {
-    return `${Math.floor(Etime / t)} months`;
-  }
+	t /= 12;
+	if (elapsedTime > t) {
+		return `${Math.floor(elapsedTime / t)} months`;
+	}
 
-  t /= 30;
-  if (Etime > t) {
-    return `${Math.floor(Etime / t)} days`;
-  }
+	t /= 30;
+	if (elapsedTime > t) {
+		return `${Math.floor(elapsedTime / t)} days`;
+	}
 
-  t /= 24;
-  if (Etime > t) {
-    return `${Math.floor(Etime / t)} hours`;
-  }
+	t /= 24;
+	if (elapsedTime > t) {
+		return `${Math.floor(elapsedTime / t)} hours`;
+	}
 
-  t /= 60;
-  if (Etime > t) {
-    return `${Math.floor(Etime / t)} mins`;
-  }
+	t /= 60;
+	if (elapsedTime > t) {
+		return `${Math.floor(elapsedTime / t)} mins`;
+	}
 
-  t /= 60;
-  if (Etime > t) {
-    return `${Math.floor(Etime / t)} secs`;
-  }
+	t /= 60;
+	if (elapsedTime > t) {
+		return `${Math.floor(elapsedTime / t)} secs`;
+	}
 
-  return '0 secs';
+	return '0 secs';
 };
