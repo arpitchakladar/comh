@@ -17,9 +17,8 @@ module.exports = {
 	},
 
 	optimization: {
-		minimize: false,
-		noEmitOnErrors: true
-  },
+		minimize: ENV === "production"
+	},
 
 	resolve: {
 		extensions: ['.jsx', '.js', '.json', '.scss'],
@@ -61,7 +60,7 @@ module.exports = {
 			},
 			{
 				test: /\.(svg|woff2?|ttf|eot|jpe?g|png|gif|mp3)(\?.*)?$/i,
-				use: ENV ==='production' ? 'file-loader' : 'url-loader'
+				use: ENV === 'production' ? 'file-loader' : 'url-loader'
 			}
 		]
 	},
@@ -73,11 +72,11 @@ module.exports = {
 		}),
 		new webpack.DefinePlugin({
 			'ENV': JSON.stringify(ENV),
-			'COMH_API_URI': JSON.stringify(ENV == 'production' ? 'https://comh-api.herokuapp.com' : 'http://localhost:8081')
+			'COMH_API_URI': JSON.stringify(ENV === 'production' ? 'https://comh-api.herokuapp.com' : 'http://localhost:8081')
 		}),
 		new HtmlWebpackPlugin({
 			template: path.join(__dirname, 'public', 'index.html'),
-			minify: { collapseWhitespace: true }
+			minify: { collapseWhitespace: ENV === "production" }
 		}),
 		new CopyWebpackPlugin({
 			patterns: [
@@ -91,7 +90,7 @@ module.exports = {
 			cacheId: 'comh-v1',
 			dontCacheBustUrlsMatching: /\.\w{8}\./,
 			filename: 'service-worker.js',
-			minify: true,
+			minify: ENV === "production",
 			navigateFallback: 'https://comh.now.sh/index.html',
 			staticFileGlobsIgnorePatterns: [/\.map$/, /asset-manifest\.json$/],
 		})

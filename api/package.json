@@ -2,12 +2,12 @@
 	"name": "comh-api",
 	"version": "1.0.0",
 	"description": "API for Comh.",
+	"author": "Arpit Chakladar",
 	"main": "server.js",
 	"scripts": {
 		"start": "node server.js",
 		"dev": "nodemon server.js"
 	},
-	"author": "Spyro",
 	"license": "MIT",
 	"dependencies": {
 		"cors": "^2.8.5",
