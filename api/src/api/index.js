@@ -1,6 +1,5 @@
 const express = require('express');
 
-if (process.env.NODE_ENV !== 'production') require('dotenv').config();
 require('./utils/db').connect();
 
 const app = express();
