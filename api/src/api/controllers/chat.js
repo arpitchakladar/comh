@@ -4,7 +4,7 @@ const storage = require('../utils/storage');
 const FileType = require('file-type');
 
 exports.join = async (socket, { name, room }, callback) => {
-	if (!name || !room) return callback({ name: 'Invalid name or room' });
+	if (!name || !room) return callback({ error: { message: 'Invalid name or room' } });
 
 	if (await User.exists({ name, room })) return callback({ error: { message: `A user with the name of ${name} already exists in ${room}` } });
 
