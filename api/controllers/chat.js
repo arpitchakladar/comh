@@ -67,7 +67,7 @@ exports.sendText = async (io, socket, { text, tagged, file }, callback) => {
 		if (file && file.originalname && file.buffer) {
 			const type = (await FileType.fromBuffer(file.buffer)).mime.split('/')[0];
 			if (type === 'image') {
-				if (file.buffer.byteLength > 1024 * 2028) {
+				if (file.buffer.byteLength > 1024 * 1024 * 15) {
 					return callback({ error: { message: 'File too big...' } });
 				}
 				_text.image = await storage.addItem(file);

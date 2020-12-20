@@ -163,15 +163,15 @@ const Chat = ({ location }) => {
 			const type = file.type.split('/')[0];
 
 			if (type === 'image') {
-				if (file.size < 1024 * 2048) {
+				if (file.size < 1024 * 1024 * 15) {
 
 					const fr = new FileReader();
-		
+
 					fr.onload = () => {
 						setNewText(state => ({ ...state, file: { originalname: file.name, buffer: fr.result } }));
 						dispatch(hideLoading());
 					};
-		
+
 					fr.readAsArrayBuffer(file);
 					dispatch(showLoading());
 				} else {
