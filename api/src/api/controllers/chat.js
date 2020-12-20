@@ -1,5 +1,5 @@
-const Text = require('../models/Text');
-const User = require('../models/User');
+const Text = require('../models/text');
+const User = require('../models/user');
 const storage = require('../utils/storage');
 const FileType = require('file-type');
 
