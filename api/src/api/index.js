@@ -1,6 +1,8 @@
 const express = require('express');
 
-require('./utils/db').connect();
+require('./utils/db').connect().then(async () => {
+	await require('./models/user').deleteMany({});
+});
 
 const app = express();
 
@@ -12,7 +14,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(require('express-rate-limit')({
 	windowMs: 10000,
 	max: 50,
-	message: { error: { message: 'Too many requests at one time. Please try again after 10 seconds.' } }
+	message: { error: { message: 'Too many requests at a time. Please try again after 10 seconds.' } }
 }));
 
 const server = require('http').createServer(app);

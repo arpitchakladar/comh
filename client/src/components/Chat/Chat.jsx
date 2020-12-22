@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import './Chat.scss';
 import { CSSTransition } from 'react-transition-group';
-import { FaSignOutAlt, FaArrowRight, FaTag, FaTimes, FaArrowDown, FaEllipsisV, FaUpload, FaImage } from 'react-icons/fa';
+import { FaSignOutAlt, FaArrowRight, FaTag, FaTimes, FaArrowDown, FaEllipsisV, FaUpload, FaImage, FaLink } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
-import { Img } from 'react-image';
 import { showLoading, hideLoading } from '@/actions/loading';
 import queryString from 'query-string';
 import io from 'socket.io-client';
@@ -11,6 +10,7 @@ import { useHistory } from 'react-router-dom';
 import Linkify from 'react-linkify';
 import Swal from 'sweetalert2';
 import validators from '@/validators/validateUser';
+import Media from "@/components/Media/Media";
 import LoadingGif from '@/assets/loading.gif';
 import NotifySound from '@/assets/notify.mp3';
 import timeElapsed from '@/methods/timeElapsed';
@@ -21,10 +21,10 @@ audio.volume = 0.3;
 
 const Chat = ({ location }) => {
 	const [texts, setTexts] =	useState(null);
-	const [newText, setNewText] = useState({ text: '', tagged: null, file: null });
+	const [newText, setNewText] = useState({ text: '', tagged: null, media: null });
 	const [showScrollToTheBottom, setShowScrollToTheBottom] = useState(false);
 	const [showMenu, setShowMenu] = useState(false);
-	const [image, setImage] = useState(null);
+	const [media, setMedia] = useState(null);
 	const history = useHistory();
 	const textsRef = useRef(null);
 	const mediaUploadRef = useRef(null);
@@ -60,12 +60,16 @@ const Chat = ({ location }) => {
 
 			socket = io(COMH_API_URI);
 
-			socket.emit('join', query, ({ error }) => {
-				if (error) {
-					Swal.fire('Error', error.message, 'error');
-					localStorage.removeItem('room');
-					localStorage.removeItem('name');
-					history.push('/');
+			socket.emit('join', query, ({ error, backup }) => {
+				if (mounted) {
+					if (error) {
+						Swal.fire('Error', error.message, 'error');
+						localStorage.removeItem('room');
+						localStorage.removeItem('name');
+						history.push('/');
+					} else if (backup) {
+						setTexts(texts => texts ? [...backup, ...texts] : backup);
+					}
 				}
 			});
 
@@ -78,14 +82,16 @@ const Chat = ({ location }) => {
 					if (document.hidden) {
 						audio.play();
 					}
+					setShowScrollToTheBottom(textsRef.current.scrollHeight - textsRef.current.scrollTop > 1500);
 				}
 			});
 
-			socket.on('backup', ({ backup }) => {
-				setTexts(texts => texts ? [...backup, ...texts] : backup);
+			socket.on('deletedText', ({ _id }) => {
+				if (mounted) {
+					setTexts(texts => texts.filter(t => t._id !== _id));
+					setShowScrollToTheBottom(textsRef.current.scrollHeight - textsRef.current.scrollTop > 1500);
+				}
 			});
-
-			socket.on('deletedText', ({ _id }) => setTexts(texts => texts.filter(t => t._id !== _id)));
 
 			textsRef.current.addEventListener('scroll', () => setShowScrollToTheBottom(textsRef.current.scrollHeight - textsRef.current.scrollTop > 1500));
 		} else {
@@ -105,22 +111,23 @@ const Chat = ({ location }) => {
 	const handleSubmit = e => {
 		e.preventDefault();
 
-		if (newText.text) {
+		if (newText.text || newText.media) {
 			if (newText.text.length > 255) {
 				Swal.fire('Error', 'Text can\'t be more than 255 characters long', 'error');
 			} else {
-				socket.emit('sendText', { text: newText.text, tagged: newText.tagged, file: newText.file }, ({ error }) => {
+				socket.emit('sendText', { text: newText.text, tagged: newText.tagged, media: newText.media }, ({ error }) => {
 					dispatch(hideLoading());
 					if (error) {
 						Swal.fire('Error', error.message, 'error');
 					}
 				});
 				dispatch(showLoading());
-				setNewText({ text: '', tagged: null, file: null });
+				setNewText({ text: '', tagged: null, media: null });
 			}
 		} else {
-			Swal.fire('Error', 'A text is required', 'error');
+			Swal.fire('Error', 'Text or a media is required', 'error');
 		}
+		mediaUploadRef.current.value = null;
 	};
 
 	const handleTag = _id => {
@@ -157,39 +164,38 @@ const Chat = ({ location }) => {
 	};
 
 	const handleMediaUpload = () => {
-		const file = mediaUploadRef.current.files[0];
+		const media = mediaUploadRef.current.files[0];
 
-		if (file) {
-			const type = file.type.split('/')[0];
+		if (media) {
+			const typeSplitted = media.type.split('/');
+			const type = typeSplitted[0];
+			const extension = typeSplitted[1];
 
-			if (type === 'image') {
-				if (file.size < 1024 * 1024 * 15) {
-
+			if (type === 'image' || (type === 'video' && ['mp4', 'ogg', 'webm'].includes(extension))) {
+				if (media.size < 1024 * 1024 * 15) {
 					const fr = new FileReader();
 
 					fr.onload = () => {
-						setNewText(state => ({ ...state, file: { originalname: file.name, buffer: fr.result } }));
+						setNewText(state => ({ ...state, media: { originalname: media.name, buffer: fr.result } }));
 						dispatch(hideLoading());
 					};
 
-					fr.readAsArrayBuffer(file);
+					fr.readAsArrayBuffer(media);
 					dispatch(showLoading());
 				} else {
-					Swal.fire('Error', 'File too big...', 'error');
-					setNewText(state => ({ ...state, file: null }));
+					Swal.fire('Error', 'Media too big', 'error');
+					setNewText(state => ({ ...state, media: null }));
 				}
 			} else {
 				Swal.fire('Error', 'Invalid media type', 'error');
-				setNewText(state => ({ ...state, file: null }));
+				setNewText(state => ({ ...state, media: null }));
 			}
 		} else setUploadMediaType(null);
 	};
 
 	const handleToggleTextMenu = (_id, setFalse) => {
 		const textElement = document.querySelector(`.text[id="${_id}"]`);
-		
 		const textContentElement = textElement.querySelector('.text-content');
-
 		const textMenuToggleElement = textElement.querySelector('.text-menu-toggle');
 
 		if ((textElement.clientWidth - textContentElement.clientWidth) <= 160) {
@@ -206,10 +212,16 @@ const Chat = ({ location }) => {
 
 		setTexts(texts => texts.map(text => {
 			if (text._id === _id) text.menu = !text.menu;
+
 			if (setFalse) text.menu = false;
 
 			return text;
 		}));
+	};
+
+	const handleInvitationLink = () => {
+		navigator.clipboard.writeText(`${COMH_URI}?room=${query.room}`);
+		Swal.fire('Info', 'Invitation link copied to your clipboard', 'info');
 	};
 
 	return (
@@ -223,6 +235,7 @@ const Chat = ({ location }) => {
 							<div className="chat-menu-content">
 								<ul>
 									<li onClick={() => history.push('/')}><FaSignOutAlt /> <div>exit</div></li>
+									<li onClick={handleInvitationLink}><FaLink /> <div>Link</div></li>
 								</ul>
 							</div>
 						</CSSTransition>
@@ -231,7 +244,7 @@ const Chat = ({ location }) => {
 				<div className="texts" ref={textsRef}>
 					{texts
 						? <>
-								{texts.map(text => 
+								{texts.map(text =>
 								<div className="text fade-enter-active" id={text._id} key={text._id} is-current-user={query.name === text.sender} is-from-console={!text.sender}>
 									<div className="text-content">
 										{text.sender &&
@@ -241,11 +254,11 @@ const Chat = ({ location }) => {
 										{text.tagged && <div className="text-tagged" onClick={() => scrollToText(text.tagged._id)}>
 											<div className="text-tagged-sender">{text.tagged.sender}</div>
 											<div className="text-tagged-content">
-												{text.tagged.image && <Img loader={<img src={LoadingGif} alt="Loading..." className="image-loader" />} src={text.tagged.image} alt="" className="text-tagged-image" />}
+												{text.tagged.media && <Media loader={<img src={LoadingGif} alt="Loading..." className="image-loader" />} src={text.tagged.media} alt="" className="text-tagged-media" disable={true} />}
 												<div className="text-tagged-content-text">{text.tagged.text}</div>
 											</div>
 										</div>}
-										{text.image && <Img loader={<img src={LoadingGif} alt="Loading..." className="image-loader" />} src={text.image} alt="" className="text-image" onClick={() => setImage(text.image)} />}
+										{text.media && <Media loader={<img src={LoadingGif} alt="Loading..." className="media-loader" />} src={text.media} alt="" className="text-media" onClick={() => setMedia(text.media)} disable={true} />}
 										<div className="text-content-text"><Linkify>{text.text}</Linkify></div>
 										{text.sender &&<div className="text-menu">
 											<button className="text-menu-toggle" type="button" onClick={() => handleToggleTextMenu(text._id)} onBlur={() => handleToggleTextMenu(text._id, true)}><FaEllipsisV /></button>
@@ -275,7 +288,7 @@ const Chat = ({ location }) => {
 								<div className="text-content">
 									{taggedText.sender && <div className="text-sender">{taggedText.sender}</div>}
 									<div className="text-message">
-										{taggedText.image && <Img loader={<img src={LoadingGif} alt="Loading..." className="image-loader" />} src={taggedText.image} alt="" className="text-tagged-image" />}
+										{taggedText.media && <Media loader={<img src={LoadingGif} alt="Loading..." className="media-loader" />} src={taggedText.media} alt="" className="text-tagged-media" disable={true} />}
 										<div className="text-message-text">{taggedText.text}</div>
 									</div>
 									<button className="cancel" type="button" onClick={() => setNewText(state => ({ ...state, tagged: null }))}><FaTimes /></button>
@@ -283,9 +296,9 @@ const Chat = ({ location }) => {
 							</div>
 					</div>}
 					<div className="new-text-fields">
-						<input type="file" id="upload-media-input" accept="image/*" onChange={handleMediaUpload} ref={mediaUploadRef} />
+						<input type="file" id="upload-media-input" accept="image/*,video/*" onChange={handleMediaUpload} ref={mediaUploadRef} />
 						<label htmlFor="upload-media-input" className="upload-media">
-							{newText.file ? <FaImage /> : <FaUpload />}
+							{newText.media ? <FaImage /> : <FaUpload />}
 						</label>
 						<input type="text" ref={textInputRef} maxLength="255" value={newText.text} onChange={e => setNewText(state => ({...state, text: e.target.value}))} />
 						<button type="submit">
@@ -294,11 +307,11 @@ const Chat = ({ location }) => {
 					</div>
 				</form>
 			</div>
-			<CSSTransition in={!!image} timeout={300} classNames="loading-fade" unmountOnExit={true}>
-				<div className="show-image">
-					<button className="close" onClick={() => setImage(null)}><FaTimes /></button>
-					<div className="image">
-						<Img loader={<img src={LoadingGif} alt="Loading..." className="image-loader" />} src={image} alt=""/>
+			<CSSTransition in={!!media} timeout={300} classNames="loading-fade" unmountOnExit={true}>
+				<div className="show-media">
+					<button className="close" onClick={() => setMedia(null)}><FaTimes /></button>
+					<div className="media">
+						<Media loader={<img src={LoadingGif} alt="Loading..." className="media-loader" />} src={media} alt="" disable={false} controls />
 					</div>
 				</div>
 			</CSSTransition>

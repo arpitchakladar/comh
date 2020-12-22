@@ -1,7 +1,8 @@
+const mime = require('mime');
+const path = require('path');
 const Text = require('../models/text');
 const User = require('../models/user');
 const storage = require('../utils/storage');
-const FileType = require('file-type');
 
 exports.join = async (socket, { name, room }, callback) => {
 	if (!name || !room) return callback({ error: { message: 'Invalid name or room' } });
@@ -34,28 +35,23 @@ exports.join = async (socket, { name, room }, callback) => {
 		} else return text.toObject();
 	}));
 
-	if (backup.length > 0) {
-		socket.emit('backup', { backup });
-	}
-
-	socket.emit('text', { text: { text: `Welcome, ${name} to ${room}` } });
-
 	socket.broadcast.to(room).emit('text', { text: { text: `${name} has joined the chat` } });
 
 	socket.join(room);
 	console.log(`A new user has joined "${room}" with the name of "${name}"`);
 
-	callback({});
+	callback({ backup: backup.length > 0 ? backup : null });
+	socket.emit('text', { text: { text: `Welcome, ${name} to ${room}` } });
 };
 
-exports.sendText = async (io, socket, { text, tagged, file }, callback) => {
-	if (text) {
-		if (text.length > 255) return callback({ error: { message: 'Text can\'t be more then 255 charaters long' } });
+exports.sendText = async (io, socket, { text, tagged, media }, callback) => {
+	if (text || media) {
+		if (text && text.length > 255) return callback({ error: { message: 'Text can\'t be more then 255 charaters long' } });
 
 		const user = await User.findOne({ _id: socket.id });
 
 		if (!user) {
-			return callback({ error: { message: 'Your account was not found in the room' } });
+			return callback({ error: { message: 'You weren\'t found in the room so try to rejoin' } });
 		}
 
 		const _text = new Text({
@@ -64,15 +60,16 @@ exports.sendText = async (io, socket, { text, tagged, file }, callback) => {
 			room: user.room
 		});
 
-		if (file && file.originalname && file.buffer) {
-			const type = (await FileType.fromBuffer(file.buffer)).mime.split('/')[0];
-			if (type === 'image') {
-				if (file.buffer.byteLength > 1024 * 1024 * 15) {
-					return callback({ error: { message: 'File too big...' } });
+		if (media && media.originalname && media.buffer) {
+			const extension = path.extname(media.originalname);
+			const type = mime.getType(extension).split('/')[0];
+			if (type === 'image' || (type === 'video' && ['mp4', 'ogg', 'webm'].includes(extension))) {
+				if (media.buffer.byteLength > 1024 * 1024 * 15) {
+					return callback({ error: { message: 'Media too big...' } });
 				}
-				_text.image = await storage.addItem(file);
+				_text.media = await storage.addItem(media);
 			} else {
-				return callback({ error: { message: 'Invalid file type' } });
+				return callback({ error: { message: 'Invalid media type' } });
 			}
 		}
 
@@ -81,10 +78,16 @@ exports.sendText = async (io, socket, { text, tagged, file }, callback) => {
 		if (tagged) {
 			const taggedText = await Text.findOne({ _id: tagged });
 			if (!taggedText || taggedText.room !== user.room) {
-				return callback({ error: { message: 'The text you tagged was not found or was deleted' } });
+				return callback({ error: { message: 'The tagged text was not found or has been deleted' } });
 			}
 			responseText.tagged = taggedText.toObject();
 			_text.tagged = tagged;
+		}
+
+		try {
+			await _text.validate();
+		} catch (error) {
+			if (error) return callback({ error: { message: error._message } });
 		}
 
 		await _text.save();

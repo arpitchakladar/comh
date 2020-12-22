@@ -7,13 +7,12 @@
 	"description": "A texting app",
 	"scripts": {
 		"build": "NODE_ENV=production webpack -c --mode production",
-		"start": "webpack-dev-server"
+		"dev": "webpack-dev-server"
 	},
 	"dependencies": {
 		"preact": "^10.4.4",
 		"query-string": "^6.13.1",
 		"react-icons": "^3.10.0",
-		"react-image": "^4.0.3",
 		"react-linkify": "^1.0.0-alpha",
 		"react-redux": "^7.2.0",
 		"react-router-dom": "^5.2.0",

@@ -15,8 +15,9 @@
 		grid-template-rows: 32px 1fr auto;
 		grid-template-columns: 100%;
 		padding: 16px;
-		.image-loader {
+		.media-loader {
 			width: 100px;
+			height: 100px;
 		}
 		.chat-header {
 			display: flex;
@@ -149,7 +150,7 @@
 							white-space: nowrap;
 							text-overflow: ellipsis;
 							@include vertically-center;
-							.text-tagged-image {
+							.text-tagged-media {
 								width: 32px;
 								height: 32px;
 								display: block;
@@ -162,7 +163,7 @@
 							}
 						}
 					}
-					.text-image {
+					.text-media {
 						width: 100%;
 						display: block;
 						margin-bottom: 4px;
@@ -340,7 +341,7 @@
 					overflow: hidden;
 					text-overflow: ellipsis;
 					@include vertically-center;
-					.text-tagged-image {
+					.text-tagged-media {
 						width: 32px;
 						height: 32px;
 						display: block;
@@ -402,7 +403,7 @@
 			}
 		}
 	}
-	.show-image {
+	.show-media {
 		position: fixed;
 		top: 0;
 		left: 0;
@@ -421,22 +422,25 @@
 			cursor: pointer;
 			color: #fff;
 		}
-		.image {
+		.media {
 			width: 100vw;
 			height: 100vh;
-			padding: 32px;
+			$media-padding: 36px;
+			padding: $media-padding;
 			z-index: 201;
-			img {
+			img, video {
 				object-fit: scale-down;
 				width: 100%;
 				height: 100%;
+				max-height: calc(100vh - #{$media-padding} * 2);
+				max-width: calc(100vw - #{$media-padding} * 2);
 			}
 		}
 	}
 }
 
 body[theme="dark"] {
-	.show-image {
+	.show-media {
 		background: rgba($color: #ddd, $alpha: 0.5);
 	}
 	.chat-menu {

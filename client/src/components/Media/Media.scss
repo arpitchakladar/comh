@@ -1,0 +1,7 @@
+.Media {
+	.media {
+		&[show="false"] {
+			display: none !important;
+		}
+	}
+}

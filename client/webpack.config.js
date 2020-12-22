@@ -38,7 +38,10 @@ module.exports = {
 		rules: [
 			{
 				test: /\.jsx?$/,
-				exclude: path.resolve(__dirname, 'src'),
+				exclude: [
+					path.resolve(__dirname, 'src'),
+					path.resolve(__dirname, "node_modules", "react-image", "umd")
+				],
 				enforce: 'pre',
 				use: 'source-map-loader'
 			},
@@ -72,7 +75,8 @@ module.exports = {
 		}),
 		new webpack.DefinePlugin({
 			'ENV': JSON.stringify(ENV),
-			'COMH_API_URI': JSON.stringify(ENV === 'production' ? 'https://comh-api.herokuapp.com' : 'http://localhost:8081')
+			'COMH_API_URI': JSON.stringify(ENV === 'production' ? 'https://comh-api.herokuapp.com' : 'http://localhost:8081'),
+			'COMH_URI': JSON.stringify(ENV === 'production' ? 'https://comh.now.sh' : 'http://localhost:8080')
 		}),
 		new HtmlWebpackPlugin({
 			template: path.join(__dirname, 'public', 'index.html'),
@@ -115,7 +119,9 @@ module.exports = {
 		publicPath: '/',
 		contentBase: './src',
 		historyApiFallback: true,
-		open: true,
-		openPage: ''
+		open: false,
+		openPage: '',
+		hot: true,
+		inline: true
 	}
 };
