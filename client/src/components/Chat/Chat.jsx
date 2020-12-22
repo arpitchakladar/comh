@@ -7,6 +7,9 @@ import { showLoading, hideLoading } from '@/actions/loading';
 import queryString from 'query-string';
 import io from 'socket.io-client';
 import { useHistory } from 'react-router-dom';
+import cryptoAES from 'crypto-js/aes';
+import cryptoSHA256 from 'crypto-js/sha256';
+import Utf8 from 'crypto-js/enc-utf8'
 import Linkify from 'react-linkify';
 import Swal from 'sweetalert2';
 import validators from '@/validators/validateUser';
@@ -39,10 +42,11 @@ const Chat = ({ location }) => {
 	useEffect(() => {
 		let mounted = true;
 
-		if (query.room && query.name) {
+		if (query.room && query.name && query.password) {
 			const validationResult = {
 				name: validators.name(query.name),
-				room: validators.room(query.room)
+				room: validators.room(query.room),
+				password: validators.password(query.password)
 			};
 
 			if (validationResult.name) {
@@ -51,31 +55,46 @@ const Chat = ({ location }) => {
 			} else if (validationResult.room) {
 				Swal.fire('Error', validationResult.room, 'error');
 				history.push('/');
+			} else if (validationResult.password) {
+				Swal.fire('Error', validationResult.password, 'error');
+				history.push('/');
 			}
 
 			localStorage.setItem('room', query.room);
 			localStorage.setItem('name', query.name);
+			localStorage.setItem('password', query.password);
 
 			document.title = `Comh - ${query.room}`;
 
 			socket = io(COMH_API_URI);
 
-			socket.emit('join', query, ({ error, backup }) => {
+			socket.emit('join', {
+				name: query.name,
+				room: query.room,
+				hashedPassword: cryptoSHA256(query.password).toString()
+			}, ({ error, backup }) => {
 				if (mounted) {
 					if (error) {
 						Swal.fire('Error', error.message, 'error');
 						localStorage.removeItem('room');
 						localStorage.removeItem('name');
+						localStorage.removeItem('password');
 						history.push('/');
 					} else if (backup) {
-						setTexts(texts => texts ? [...backup, ...texts] : backup);
+						setTexts(texts => {
+							const _backup = backup.map(text => ({ ...text, text: cryptoAES.decrypt(text.text, query.password).toString(Utf8) }));
+							return texts ? [..._backup, ...texts] : _backup;
+						});
 					}
 				}
 			});
 
-			socket.on('text', ({ text }) => {
+			socket.on('text', ({ text, unencrypted }) => {
 				if (mounted) {
-					setTexts(state => state ? [...state, text] : [text]);
+					setTexts(state => {
+						const _text = unencrypted ? text.text : cryptoAES.decrypt(text.text, query.password).toString(Utf8);
+						return state ? [...state, { ...text, text: _text }] : [{ ...text, text: _text }];
+					});
 					setTimeout(() => {
 						if ((textsRef.current.clientHeight + textsRef.current.scrollTop) >= (textsRef.current.scrollHeight - 200)) scrollToBottom();
 					}, 400);
@@ -115,7 +134,7 @@ const Chat = ({ location }) => {
 			if (newText.text.length > 255) {
 				Swal.fire('Error', 'Text can\'t be more than 255 characters long', 'error');
 			} else {
-				socket.emit('sendText', { text: newText.text, tagged: newText.tagged, media: newText.media }, ({ error }) => {
+				socket.emit('sendText', { text: cryptoAES.encrypt(newText.text, query.password).toString(), tagged: newText.tagged, media: newText.media }, ({ error }) => {
 					dispatch(hideLoading());
 					if (error) {
 						Swal.fire('Error', error.message, 'error');
@@ -220,7 +239,7 @@ const Chat = ({ location }) => {
 	};
 
 	const handleInvitationLink = () => {
-		navigator.clipboard.writeText(`${COMH_URI}?room=${query.room}`);
+		navigator.clipboard.writeText(`${COMH_URI}?room=${query.room}&password=${query.password}`);
 		Swal.fire('Info', 'Invitation link copied to your clipboard', 'info');
 	};
 
@@ -260,7 +279,7 @@ const Chat = ({ location }) => {
 										</div>}
 										{text.media && <Media loader={<img src={LoadingGif} alt="Loading..." className="media-loader" />} src={text.media} alt="" className="text-media" onClick={() => setMedia(text.media)} disable={true} />}
 										<div className="text-content-text"><Linkify>{text.text}</Linkify></div>
-										{text.sender &&<div className="text-menu">
+										{text.sender && <div className="text-menu">
 											<button className="text-menu-toggle" type="button" onClick={() => handleToggleTextMenu(text._id)} onBlur={() => handleToggleTextMenu(text._id, true)}><FaEllipsisV /></button>
 											<CSSTransition in={text.menu} classNames="fade" timeout={300} unmountOnExit={true}>
 												<div className="text-menu-content">

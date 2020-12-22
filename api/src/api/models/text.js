@@ -4,13 +4,14 @@ const storage = require('../utils/storage');
 const TextSchema = mongoose.Schema({
 	text: {
 		type: String,
-		maxlength: [255, 'Text can\'t be more than 255 characters long']
+		maxlength: [1024 * 5, 'Text size can\'t be more then 5kb']
 	},
 	sender: {
-		type: String
+		type: String,
+		required: true
 	},
 	room: {
-		type: String,
+		type: mongoose.Schema.Types.ObjectId,
 		required: [true, 'Text room is required']
 	},
 	tagged: {

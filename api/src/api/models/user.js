@@ -11,10 +11,9 @@ const UserSchema = mongoose.Schema({
 		required: [true, 'User name is required']
 	},
 	room: {
-		type: String,
-		maxlength: [50, 'User room name can\'t be more than 50 characters long'],
-		required: [true, 'User room name is required']
+		type: mongoose.Schema.Types.ObjectId,
+		required: [true, 'User room is required']
 	}
 }, { _id: false, timestamps: { createdAt: true, updatedAt: false } });
 
-module.exports = mongoose.model('Users', UserSchema);
+module.exports = mongoose.model('User', UserSchema);

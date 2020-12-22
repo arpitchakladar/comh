@@ -9,11 +9,13 @@ import validators from '@/validators/validateUser';
 const Join = () => {
 	const [formData, setFormData] = useState({
 		name: '',
-		room: ''
+		room: '',
+		password: ''
 	});
 	const [formErrors, setFormErrors] = useState({
 		name: '',
-		room: ''
+		room: '',
+		password: ''
 	});
 	const history = useHistory();
 	const query = useMemo(() => queryString.parse(location.search), [location.search]);
@@ -25,19 +27,19 @@ const Join = () => {
 
 		if (query.room || query.name) {
 			setFormData(state => {
-				const newState = { ...state, room: query.room };
+				if (query.room) state.room = query.room;
+				if (query.name) state.name = query.name;
+				if (query.password) state.password = query.password;
 
-				if (query.room) newState.room = query.room;
-				if (query.name) newState.name = query.name;
-
-				return newState;
+				return state;
 			});
 		} else {
 			const previousRoom = localStorage.getItem('room');
 			const previousName = localStorage.getItem('name');
-		
+			const previousPassword = localStorage.getItem('password');
+
 			if (previousRoom && previousName) {
-				setFormData({ name: previousName, room: previousRoom });
+				setFormData({ name: previousName, room: previousRoom, password: previousPassword });
 			}
 		}
 
@@ -62,7 +64,7 @@ const Join = () => {
 		}
 		setFormErrors(errors);
 		if (Object.values(errors).every(error => error === '')) {
-			history.push(`/chat?name=${formData.name.trim()}&room=${formData.room.trim()}`);
+			history.push(`/chat?name=${formData.name.trim()}&room=${formData.room.trim()}&password=${formData.password}`);
 		} else {
 			Swal.fire('Error', 'Invalid form.', 'error');
 		}
@@ -75,6 +77,8 @@ const Join = () => {
 				{formErrors.name !== '' && <div className="validation-error">{formErrors.name}</div>}
 				<input type="text" maxLength="50" name="room" placeholder="Room" invalid={!!formErrors.room} value={formData.room} onChange={handleChange} onBlur={handleBlur} />
 				{formErrors.room !== '' && <div className="validation-error">{formErrors.room}</div>}
+				<input type="password" maxLength="50" name="password" placeholder="Password" invalid={!!formErrors.password} value={formData.password} onChange={handleChange} onBlur={handleBlur} />
+				{formErrors.password !== '' && <div className="validation-error">{formErrors.password}</div>}
 				<button type="submit">
 					<FaSignInAlt />
 					<span>join</span>

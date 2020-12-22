@@ -9,9 +9,17 @@ export default {
 	},
 	room: value => {
 		if (!value) {
-			return 'Room is required';
+			return 'Room name is required';
 		} else if (value.length > 50) {
-			return 'Room can\'t be more than 50 characters long';
+			return 'Room name can\'t be more than 50 characters long';
+		}
+		return '';
+	},
+	password: value => {
+		if (!value) {
+			return 'Password is required';
+		} else if (value.length  > 50) {
+			return 'Password can\'t be more than 50 characters long';
 		}
 		return '';
 	}

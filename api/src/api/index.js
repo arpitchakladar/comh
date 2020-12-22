@@ -28,7 +28,7 @@ app.get('/', (req, res) => res.send('Comh API.'));
 app.get('/file/:key', fileController.getFile);
 
 io.on('connection', socket => {
-	socket.on('join', ({ name, room }, callback) => chatControllers.join(socket, { name, room }, callback));
+	socket.on('join', (data, callback) => chatControllers.join(socket, data, callback));
 
 	socket.on('sendText', (data, callback) => chatControllers.sendText(io, socket, data, callback));
 
