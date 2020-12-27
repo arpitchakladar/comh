@@ -1,6 +1,12 @@
-const mongoose = require('mongoose');
+import { Schema, Document, model } from "mongoose";
 
-const UserSchema = mongoose.Schema({
+export interface User extends Document {
+	_id: string;
+	name: string;
+	room: any;
+};
+
+const UserSchema = new Schema<User>({
 	_id: {
 		type: String,
 		required: [true, 'User id is required']
@@ -11,9 +17,9 @@ const UserSchema = mongoose.Schema({
 		required: [true, 'User name is required']
 	},
 	room: {
-		type: mongoose.Schema.Types.ObjectId,
+		type: Schema.Types.ObjectId,
 		required: [true, 'User room is required']
 	}
 }, { _id: false, timestamps: { createdAt: true, updatedAt: false } });
 
-module.exports = mongoose.model('User', UserSchema);
+export const UserModel = model<User>('User', UserSchema);

@@ -1,8 +1,9 @@
 api/node_modules
 api/.env
 api/.gitignore
+api/dist
 
 client/node_modules
 client/.vercel
 client/.gitignore
-client/build
+client/dist
