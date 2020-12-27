@@ -7,7 +7,7 @@
 	"license": "MIT",
 	"scripts": {
 		"start": "node dist/server.js",
-		"build": "tsc -p",
+		"build": "tsc -p .",
 		"dev": "concurrently \"tsc -w\" \"nodemon dist/server.js\""
 	},
 	"dependencies": {
