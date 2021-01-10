@@ -9,7 +9,9 @@ const urlsToCache = [
 	"/assets/loading.gif",
 	"/assets/notify.mp3",
 	"https://fonts.googleapis.com/css2?family=Montserrat&display=swap",
-	"https://fonts.gstatic.com/s/montserrat/v15/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2"
+	"https://fonts.gstatic.com/s/montserrat/v15/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2",
+	"https://unpkg.com/react@17.0.1/umd/react.production.min.js",
+	"https://unpkg.com/react-dom@17.0.1/umd/react-dom.production.min.js"
 ];
 
 self.addEventListener("install", (event) => {

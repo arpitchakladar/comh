@@ -67,12 +67,14 @@ export default [{
 	]
 }, {
 	input: path.resolve(__dirname, "src", "index.js"),
-	external: ["crypto"],
+	external: ["crypto", "react", "react-dom"],
 	output: {
 		file: path.resolve(__dirname, "dist", "bundle.js"),
 		format: "iife",
 		globals: {
-			"crypto": "crypto"
+			"crypto": "crypto",
+			"react": "React",
+			"react-dom": "ReactDOM"
 		}
 	},
 	onwarn: ({ message }) => {
