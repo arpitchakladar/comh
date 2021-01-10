@@ -14,12 +14,10 @@ import Linkify from 'react-linkify';
 import Swal from 'sweetalert2';
 import validators from '@/validators/validateUser';
 import Media from "@/components/Media/Media";
-import LoadingGif from '@/assets/loading.gif';
-import NotifySound from '@/assets/notify.mp3';
 import timeElapsed from '@/methods/timeElapsed';
 
 let socket;
-const audio = new Audio(NotifySound);
+const audio = new Audio("/assets/notify.mp3");
 audio.volume = 0.3;
 
 const Chat = ({ location }) => {
@@ -239,7 +237,11 @@ const Chat = ({ location }) => {
 	};
 
 	const handleInvitationLink = () => {
-		navigator.clipboard.writeText(`${COMH_URI}?room=${query.room}&password=${query.password}`);
+		const urlParams = queryString.stringify({
+			room: query.room,
+			password: query.password
+		});
+		navigator.clipboard.writeText(`${COMH_URI}?${urlParams}`);
 		Swal.fire('Info', 'Invitation link copied to your clipboard', 'info');
 	};
 
@@ -263,8 +265,8 @@ const Chat = ({ location }) => {
 				<div className="texts" ref={textsRef}>
 					{texts
 						? <>
-								{texts.map(text =>
-								<div className="text fade-enter-active" id={text._id} key={text._id} is-current-user={query.name === text.sender} is-from-console={!text.sender}>
+								{texts.map((text, num) =>
+								<div className="text fade-enter-active" id={text._id} key={text._id || num} is-current-user={query.name === text.sender ? "" : undefined} is-from-console={text.sender ? undefined : ""}>
 									<div className="text-content">
 										{text.sender &&
 											(query.name !== text.sender
@@ -273,11 +275,11 @@ const Chat = ({ location }) => {
 										{text.tagged && <div className="text-tagged" onClick={() => scrollToText(text.tagged._id)}>
 											<div className="text-tagged-sender">{text.tagged.sender}</div>
 											<div className="text-tagged-content">
-												{text.tagged.media && <Media loader={<img src={LoadingGif} alt="Loading..." className="image-loader" />} src={text.tagged.media} alt="" className="text-tagged-media" disable={true} />}
+												{text.tagged.media && <Media loader={<img src="/assets/loading.gif" alt="Loading..." className="image-loader" />} src={text.tagged.media} alt="" className="text-tagged-media" disable={true} />}
 												<div className="text-tagged-content-text">{text.tagged.text}</div>
 											</div>
 										</div>}
-										{text.media && <Media loader={<img src={LoadingGif} alt="Loading..." className="media-loader" />} src={text.media} alt="" className="text-media" onClick={() => setMedia(text.media)} disable={true} />}
+										{text.media && <Media loader={<img src="/assets/loading.gif" alt="Loading..." className="media-loader" />} src={text.media} alt="" className="text-media" onClick={() => setMedia(text.media)} disable={true} />}
 										<div className="text-content-text"><Linkify>{text.text}</Linkify></div>
 										{text.sender && <div className="text-menu">
 											<button className="text-menu-toggle" type="button" onClick={() => handleToggleTextMenu(text._id)} onBlur={() => handleToggleTextMenu(text._id, true)}><FaEllipsisV /></button>
@@ -298,16 +300,16 @@ const Chat = ({ location }) => {
 									</button>
 								</CSSTransition>
 							</>
-						: <img src={LoadingGif} alt="Loading..." className="Loading" />
+						: <img src="/assets/loading.gif" alt="Loading..." className="Loading" />
 					}
 				</div>
 				<form className="new-text" onSubmit={handleSubmit} autoComplete="off">
 					{taggedText && <div className="tagged">
-							<div className="text" key={taggedText._id} is-current-user={query.name === taggedText.sender}>
+							<div className="text" key={taggedText._id} is-current-user={query.name === taggedText.sender ? "" : undefined}>
 								<div className="text-content">
 									{taggedText.sender && <div className="text-sender">{taggedText.sender}</div>}
 									<div className="text-message">
-										{taggedText.media && <Media loader={<img src={LoadingGif} alt="Loading..." className="media-loader" />} src={taggedText.media} alt="" className="text-tagged-media" disable={true} />}
+										{taggedText.media && <Media loader={<img src="/assets/loading.gif" alt="Loading..." className="media-loader" />} src={taggedText.media} alt="" className="text-tagged-media" disable={true} />}
 										<div className="text-message-text">{taggedText.text}</div>
 									</div>
 									<button className="cancel" type="button" onClick={() => setNewText(state => ({ ...state, tagged: null }))}><FaTimes /></button>
@@ -330,7 +332,7 @@ const Chat = ({ location }) => {
 				<div className="show-media">
 					<button className="close" onClick={() => setMedia(null)}><FaTimes /></button>
 					<div className="media">
-						<Media loader={<img src={LoadingGif} alt="Loading..." className="media-loader" />} src={media} alt="" disable={false} controls />
+						<Media loader={<img src="/assets/loading.gif" alt="Loading..." className="media-loader" />} src={media} alt="" disable={false} controls />
 					</div>
 				</div>
 			</CSSTransition>

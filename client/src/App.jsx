@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import './App.scss';
 import { TransitionGroup, CSSTransition } from 'react-transition-group';
 import { Switch, Route, Redirect } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import LoadingGif from '@/assets/loading.gif';
 import Join from '@/components/Join/Join';
 import Chat from '@/components/Chat/Chat';
 
@@ -13,7 +12,7 @@ const App = () => {
 
 	useEffect(() => setTheme(document.body.getAttribute('theme')), []);
 
-	useEffect(() => document.body.setAttribute('theme', theme), [theme]);
+	useLayoutEffect(() => document.body.setAttribute('theme', theme), [theme]);
 
 	const handleToggleTheme = () => {
 		setTheme(theme => {
@@ -32,7 +31,7 @@ const App = () => {
 			</div>
 			<CSSTransition in={loading} timeout={300} classNames="loading-fade" unmountOnExit={true}>
 				<div className="loading-backdrop">
-					<img src={LoadingGif} alt="Loading..." className="Loading"/>
+					<img src="/assets/loading.gif" alt="Loading..." className="Loading"/>
 				</div>
 			</CSSTransition>
 			<Route render={({ location }) =>

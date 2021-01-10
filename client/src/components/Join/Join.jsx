@@ -73,11 +73,32 @@ const Join = () => {
 	return (
 		<div className="Join">
 			<form onSubmit={handleSubmit} autoComplete="off">
-				<input type="text" maxLength="32" name="name" placeholder="Name" invalid={!!formErrors.name} value={formData.name} onChange={handleChange} onBlur={handleBlur} />
+				<input
+					type="text"
+					maxLength="32"
+					name="name"
+					placeholder="Name"
+					invalid={formErrors.name ? formErrors.name : undefined}
+					value={formData.name} onChange={handleChange} onBlur={handleBlur}
+				/>
 				{formErrors.name !== '' && <div className="validation-error">{formErrors.name}</div>}
-				<input type="text" maxLength="50" name="room" placeholder="Room" invalid={!!formErrors.room} value={formData.room} onChange={handleChange} onBlur={handleBlur} />
+				<input
+					type="text"
+					maxLength="50"
+					name="room"
+					placeholder="Room"
+					invalid={formErrors.room ? formErrors.room : undefined}
+					value={formData.room} onChange={handleChange} onBlur={handleBlur}
+				/>
 				{formErrors.room !== '' && <div className="validation-error">{formErrors.room}</div>}
-				<input type="password" maxLength="50" name="password" placeholder="Password" invalid={!!formErrors.password} value={formData.password} onChange={handleChange} onBlur={handleBlur} />
+				<input
+					type="password"
+					maxLength="50"
+					name="password"
+					placeholder="Password"
+					invalid={formErrors.password ? formErrors.password : undefined}
+					value={formData.password} onChange={handleChange} onBlur={handleBlur}
+				/>
 				{formErrors.password !== '' && <div className="validation-error">{formErrors.password}</div>}
 				<button type="submit">
 					<FaSignInAlt />

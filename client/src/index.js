@@ -2,24 +2,20 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.scss';
 import App from './App';
-import { BrowserRouter } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import store from '@/reducers';
 
-if (ENV === "development") {
-	require('preact/devtools');
-}
-
 ReactDOM.render(
-	<BrowserRouter>
+	<HashRouter>
 		<Provider store={store}>
 			<App />
 		</Provider>
-	</BrowserRouter>,
+	</HashRouter>,
 	document.getElementById('root')
 );
 
-navigator.serviceWorker.register('/service-worker.js');
+navigator.serviceWorker.register('/sw.js');
 
 document.addEventListener('DOMContentLoaded', () => {
 	const _theme = localStorage.getItem('theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
