@@ -9,36 +9,15 @@ import postcss from "rollup-plugin-postcss";
 import replace from "@rollup/plugin-replace";
 import builtins from "rollup-plugin-node-builtins";
 import globals from "rollup-plugin-node-globals";
+import serve from "rollup-plugin-serve";
+import livereload from "rollup-plugin-livereload";
 import { terser } from "rollup-plugin-terser";
 import reactSvg from "rollup-plugin-react-svg";
 import { minifyHTML } from "rollup-plugin-minify-html";
 
 const ENV = process.env.NODE_ENV || "development";
 
-const COMH_API_URI = process.env.COMH_API_URI || "https://comh-api.herokuapp.com";
-
 const production = ENV === "production";
-
-const serve = () => {
-	let server;
-
-	const toExit = () => {
-		if (server) server.kill(0);
-	}
-
-	return {
-		writeBundle() {
-			if (server) return;
-			server = require("child_process").spawn("yarn", ["start"], {
-				stdio: ["ignore", "inherit", "inherit"],
-				shell: true
-			});
-
-			process.on("SIGTERM", toExit);
-			process.on("exit", toExit);
-		}
-	};
-}
 
 export default [{
 	input: path.resolve(__dirname, "public", "sw.js"),
@@ -128,7 +107,7 @@ export default [{
 		}),
 		replace({
 			"process.env.NODE_ENV": JSON.stringify(ENV),
-			"COMH_API_URI": JSON.stringify(COMH_API_URI),
+			"COMH_API_URI": JSON.stringify(process.env.COMH_API_URI || "https://comh-api.herokuapp.com"),
 			"COMH_URI": JSON.stringify(!production && process.env.ROLLUP_WATCH ? "http://localhost:8080" : "https://comh.now.sh")
 		}),
 		alias({
@@ -154,7 +133,11 @@ export default [{
 			extract: path.resolve(__dirname, "dist", "style.css")
 		}),
 		reactSvg(),
-		!production && process.env.ROLLUP_WATCH && serve(),
+		!production && process.env.ROLLUP_WATCH && serve({
+			contentBase: "dist",
+			port: 8080
+		}),
+		!production && process.env.ROLLUP_WATCH && livereload("dist"),
 		production && terser()
 	],
 	watch: {

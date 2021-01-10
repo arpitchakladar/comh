@@ -1,46 +1,52 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { FaSignInAlt } from 'react-icons/fa';
-import './Join.scss';
-import Swal from 'sweetalert2';
-import queryString from 'query-string';
-import { useHistory } from 'react-router-dom';
-import validators from '@/validators/validateUser';
+import React, { useState, useEffect, useMemo } from "react";
+import { FaSignInAlt } from "react-icons/fa";
+import "./Join.scss";
+import Swal from "sweetalert2";
+import queryString from "query-string";
+import { useHistory } from "react-router-dom";
+import validators from "@/validators/validateUser";
 
 const Join = () => {
 	const [formData, setFormData] = useState({
-		name: '',
-		room: '',
-		password: ''
+		name: "",
+		room: "",
+		password: ""
 	});
 	const [formErrors, setFormErrors] = useState({
-		name: '',
-		room: '',
-		password: ''
+		name: "",
+		room: "",
+		password: ""
 	});
 	const history = useHistory();
-	const query = useMemo(() => queryString.parse(location.search), [location.search]);
+	const query = useMemo(() => queryString.parse(history.location.search), [history.location.search]);
 
 	useEffect(() => {
 		let mounted = true;
 
 		document.title = "Comh";
 
-		if (query.room || query.name) {
+		setFormData(state => {
+			const previousRoom = localStorage.getItem("room");
+			const previousName = localStorage.getItem("name");
+			const previousPassword = localStorage.getItem("password");
+
+			if (previousRoom) state.room = previousRoom;
+			if (previousName) state.name = previousName;
+			if (previousPassword) state.password = previousPassword;
+
+			return state;
+		});
+
+		if (query.room || query.name || query.password) {
 			setFormData(state => {
+				state.name = state.room = state.password = "";
+
 				if (query.room) state.room = query.room;
 				if (query.name) state.name = query.name;
 				if (query.password) state.password = query.password;
 
 				return state;
 			});
-		} else {
-			const previousRoom = localStorage.getItem('room');
-			const previousName = localStorage.getItem('name');
-			const previousPassword = localStorage.getItem('password');
-
-			if (previousRoom && previousName) {
-				setFormData({ name: previousName, room: previousRoom, password: previousPassword });
-			}
 		}
 
 		return () => mounted = false;
@@ -48,7 +54,7 @@ const Join = () => {
 
 	const handleChange = ({ target: { name, value } }) => {
 		setFormData(state => ({ ...state, [name]: value }));
-		setFormErrors(state => ({ ...state, [name]: '' }));
+		setFormErrors(state => ({ ...state, [name]: "" }));
 	};
 
 	const handleBlur = ({ target: { name, value } }) => {
@@ -63,10 +69,16 @@ const Join = () => {
 			errors[key] = validators[key](formData[key]);
 		}
 		setFormErrors(errors);
-		if (Object.values(errors).every(error => error === '')) {
-			history.push(`/chat?name=${formData.name.trim()}&room=${formData.room.trim()}&password=${formData.password}`);
+		if (Object.values(errors).every(error => error === "")) {
+			const urlQuery = queryString.stringify({
+				name: formData.name.trim(),
+				room: formData.room.trim(),
+				password: formData.password
+			});
+
+			history.push(`/chat?${urlQuery}`);
 		} else {
-			Swal.fire('Error', 'Invalid form.', 'error');
+			Swal.fire("Error", "Invalid form.", "error");
 		}
 	};
 
@@ -81,7 +93,7 @@ const Join = () => {
 					invalid={formErrors.name ? formErrors.name : undefined}
 					value={formData.name} onChange={handleChange} onBlur={handleBlur}
 				/>
-				{formErrors.name !== '' && <div className="validation-error">{formErrors.name}</div>}
+				{formErrors.name !== "" && <div className="validation-error">{formErrors.name}</div>}
 				<input
 					type="text"
 					maxLength="50"
@@ -90,7 +102,7 @@ const Join = () => {
 					invalid={formErrors.room ? formErrors.room : undefined}
 					value={formData.room} onChange={handleChange} onBlur={handleBlur}
 				/>
-				{formErrors.room !== '' && <div className="validation-error">{formErrors.room}</div>}
+				{formErrors.room !== "" && <div className="validation-error">{formErrors.room}</div>}
 				<input
 					type="password"
 					maxLength="50"
@@ -99,7 +111,7 @@ const Join = () => {
 					invalid={formErrors.password ? formErrors.password : undefined}
 					value={formData.password} onChange={handleChange} onBlur={handleBlur}
 				/>
-				{formErrors.password !== '' && <div className="validation-error">{formErrors.password}</div>}
+				{formErrors.password !== "" && <div className="validation-error">{formErrors.password}</div>}
 				<button type="submit">
 					<FaSignInAlt />
 					<span>join</span>

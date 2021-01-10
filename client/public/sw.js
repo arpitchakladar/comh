@@ -8,7 +8,8 @@ const urlsToCache = [
 	"/favicon.ico",
 	"/assets/loading.gif",
 	"/assets/notify.mp3",
-	"https://fonts.googleapis.com/css2?family=Montserrat&display=swap"
+	"https://fonts.googleapis.com/css2?family=Montserrat&display=swap",
+	"https://fonts.gstatic.com/s/montserrat/v15/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2"
 ];
 
 self.addEventListener("install", (event) => {
@@ -22,18 +23,14 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("fetch", (event) => {
 	event.respondWith(
-		caches.match(event.request).then(cachedResponse => {
-			if (cachedResponse) {
-				return cachedResponse;
-			}
-
-			return caches.open(RUNTIME).then(cache => {
-				return fetch(event.request).then(response => {
-					cache.put(event.request, response.clone());
+		caches.match(event.request)
+			.then((response) => {
+				if (response) {
 					return response;
-				});
-			});
-		})
+				}
+
+				return fetch(event.request);
+			})
 	);
 });
 

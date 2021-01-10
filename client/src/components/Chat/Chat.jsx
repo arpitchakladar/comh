@@ -1,20 +1,21 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import './Chat.scss';
-import { CSSTransition } from 'react-transition-group';
-import { FaSignOutAlt, FaArrowRight, FaTag, FaTimes, FaArrowDown, FaEllipsisV, FaUpload, FaImage, FaLink } from 'react-icons/fa';
-import { useDispatch } from 'react-redux';
-import { showLoading, hideLoading } from '@/actions/loading';
-import queryString from 'query-string';
-import io from 'socket.io-client';
-import { useHistory } from 'react-router-dom';
-import cryptoAES from 'crypto-js/aes';
-import cryptoSHA256 from 'crypto-js/sha256';
-import Utf8 from 'crypto-js/enc-utf8'
-import Linkify from 'react-linkify';
-import Swal from 'sweetalert2';
-import validators from '@/validators/validateUser';
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import "./Chat.scss";
+import { CSSTransition } from "react-transition-group";
+import { FaSignOutAlt, FaArrowRight, FaTag, FaTimes, FaArrowDown, FaEllipsisV, FaUpload, FaImage, FaLink } from "react-icons/fa";
+import { useDispatch } from "react-redux";
+import { showLoading, hideLoading } from "@/actions/loading";
+import queryString from "query-string";
+import io from "socket.io-client";
+import { useHistory } from "react-router-dom";
+import cryptoAES from "crypto-js/aes";
+import cryptoSHA256 from "crypto-js/sha256";
+import Utf8 from "crypto-js/enc-utf8"
+import Linkify from "react-linkify";
+import Swal from "sweetalert2";
+import axios from "axios";
+import validators from "@/validators/validateUser";
 import Media from "@/components/Media/Media";
-import timeElapsed from '@/methods/timeElapsed';
+import timeElapsed from "@/methods/timeElapsed";
 
 let socket;
 const audio = new Audio("/assets/notify.mp3");
@@ -22,7 +23,7 @@ audio.volume = 0.3;
 
 const Chat = ({ location }) => {
 	const [texts, setTexts] =	useState(null);
-	const [newText, setNewText] = useState({ text: '', tagged: null, media: null });
+	const [newText, setNewText] = useState({ text: "", tagged: null, media: null });
 	const [showScrollToTheBottom, setShowScrollToTheBottom] = useState(false);
 	const [showMenu, setShowMenu] = useState(false);
 	const [media, setMedia] = useState(null);
@@ -48,50 +49,66 @@ const Chat = ({ location }) => {
 			};
 
 			if (validationResult.name) {
-				Swal.fire('Error', validationResult.name, 'error');
-				history.push('/');
+				Swal.fire("Error", validationResult.name, "error");
+				history.push("/");
 			} else if (validationResult.room) {
-				Swal.fire('Error', validationResult.room, 'error');
-				history.push('/');
+				Swal.fire("Error", validationResult.room, "error");
+				history.push("/");
 			} else if (validationResult.password) {
-				Swal.fire('Error', validationResult.password, 'error');
-				history.push('/');
+				Swal.fire("Error", validationResult.password, "error");
+				history.push("/");
 			}
 
-			localStorage.setItem('room', query.room);
-			localStorage.setItem('name', query.name);
-			localStorage.setItem('password', query.password);
+			localStorage.setItem("room", query.room);
+			localStorage.setItem("name", query.name);
+			localStorage.setItem("password", query.password);
 
 			document.title = `Comh - ${query.room}`;
 
-			socket = io(COMH_API_URI);
+			socket = io(window.comhApiUri);
 
-			socket.emit('join', {
+			socket.emit("join", {
 				name: query.name,
 				room: query.room,
 				hashedPassword: cryptoSHA256(query.password).toString()
 			}, ({ error, backup }) => {
 				if (mounted) {
 					if (error) {
-						Swal.fire('Error', error.message, 'error');
-						localStorage.removeItem('room');
-						localStorage.removeItem('name');
-						localStorage.removeItem('password');
-						history.push('/');
+						Swal.fire("Error", error.message, "error");
+						localStorage.removeItem("room");
+						localStorage.removeItem("name");
+						localStorage.removeItem("password");
+						history.push("/");
 					} else if (backup) {
 						setTexts(texts => {
-							const _backup = backup.map(text => ({ ...text, text: cryptoAES.decrypt(text.text, query.password).toString(Utf8) }));
+							const _backup = backup.map(text => {
+								let tagged = undefined;
+								if (text.tagged) {
+									tagged = {
+										...text.tagged,
+										text: text.tagged.text ? cryptoAES.decrypt(text.tagged.text, query.password).toString(Utf8) : undefined
+									};
+								}
+								return { ...text, tagged, text: cryptoAES.decrypt(text.text, query.password).toString(Utf8) };
+							});
 							return texts ? [..._backup, ...texts] : _backup;
 						});
 					}
 				}
 			});
 
-			socket.on('text', ({ text, unencrypted }) => {
+			socket.on("text", ({ text, unencrypted }) => {
 				if (mounted) {
 					setTexts(state => {
-						const _text = unencrypted ? text.text : cryptoAES.decrypt(text.text, query.password).toString(Utf8);
-						return state ? [...state, { ...text, text: _text }] : [{ ...text, text: _text }];
+						const _text = text.text ? (unencrypted ? text.text : cryptoAES.decrypt(text.text, query.password).toString(Utf8)) : undefined;
+						let tagged = undefined;
+						if (text.tagged) {
+							tagged = {
+								...text.tagged,
+								text: text.tagged.text ? cryptoAES.decrypt(text.tagged.text, query.password).toString(Utf8) : undefined
+							};
+						}
+						return state ? [...state, { ...text, tagged, text: _text }] : [{ ...text, tagged, text: _text }];
 					});
 					setTimeout(() => {
 						if ((textsRef.current.clientHeight + textsRef.current.scrollTop) >= (textsRef.current.scrollHeight - 200)) scrollToBottom();
@@ -103,16 +120,16 @@ const Chat = ({ location }) => {
 				}
 			});
 
-			socket.on('deletedText', ({ _id }) => {
+			socket.on("deletedText", ({ _id }) => {
 				if (mounted) {
 					setTexts(texts => texts.filter(t => t._id !== _id));
 					setShowScrollToTheBottom(textsRef.current.scrollHeight - textsRef.current.scrollTop > 1500);
 				}
 			});
 
-			textsRef.current.addEventListener('scroll', () => setShowScrollToTheBottom(textsRef.current.scrollHeight - textsRef.current.scrollTop > 1500));
+			textsRef.current.addEventListener("scroll", () => setShowScrollToTheBottom(textsRef.current.scrollHeight - textsRef.current.scrollTop > 1500));
 		} else {
-			history.push('/');
+			history.push("/");
 		}
 
 		return () => {
@@ -123,26 +140,68 @@ const Chat = ({ location }) => {
 		};
 	}, [query, history]);
 
-	const scrollToBottom = () => textsRef.current.scroll({ top: textsRef.current.scrollHeight, behavior: 'smooth' });
+	const scrollToBottom = () => textsRef.current.scroll({ top: textsRef.current.scrollHeight, behavior: "smooth" });
 
 	const handleSubmit = e => {
 		e.preventDefault();
 
 		if (newText.text || newText.media) {
 			if (newText.text.length > 255) {
-				Swal.fire('Error', 'Text can\'t be more than 255 characters long', 'error');
+				Swal.fire("Error", "Text can't be more than 255 characters long", "error");
 			} else {
-				socket.emit('sendText', { text: cryptoAES.encrypt(newText.text, query.password).toString(), tagged: newText.tagged, media: newText.media }, ({ error }) => {
-					dispatch(hideLoading());
-					if (error) {
-						Swal.fire('Error', error.message, 'error');
-					}
-				});
 				dispatch(showLoading());
-				setNewText({ text: '', tagged: null, media: null });
+
+				new Promise((resolve, _) => {
+					new Promise((resolve, reject) => {
+						new Promise((resolve, reject) => {
+							if (newText.media) {
+								const formData = new FormData();
+								formData.append("media", newText.media);
+								axios.post(`${window.comhApiUri}/media/upload`, formData, {
+									headers: {
+										"Content-Type": "multipart/form-data"
+									}
+								}).then(({ data }) => {
+										resolve(data.url);
+									})
+									.catch(({ response }) => {
+										if (response) {
+											reject(response.data.error.message);
+										} else {
+											reject("An error occured.");
+										}
+									});
+							} else {
+								resolve(undefined);
+							}
+						}).then((media) => {
+							socket.emit(
+								"sendText",
+								{
+									text: cryptoAES.encrypt(newText.text, query.password).toString(),
+									tagged: newText.tagged,
+									media
+								},
+								({ error }) => {
+									if (error) reject(error.message);
+									resolve();
+								}
+							);
+						}).catch(reject);
+					}).then(() => {
+						resolve();
+					}).catch(async (message) => {
+						Swal.fire("Error", message, "error");
+						resolve();
+					});
+				}).then(() => {
+					dispatch(hideLoading());
+					setNewText({ text: "", tagged: null, media: null });
+				});
+
 			}
 		} else {
-			Swal.fire('Error', 'Text or a media is required', 'error');
+			Swal.fire("Error", "Text or a media is required", "error");
 		}
 		mediaUploadRef.current.value = null;
 	};
@@ -155,13 +214,13 @@ const Chat = ({ location }) => {
 	};
 
 	const handleDelete = _id => {
-		Swal.fire('Are you sure?', 'Are you sure you want to delete the text?', 'question').then(({ value }) => {
+		Swal.fire("Are you sure?", "Are you sure you want to delete the text?", "question").then(({ value }) => {
 			if (value) {
 				dispatch(showLoading());
-				socket.emit('deleteText', { _id }, ({ error }) => {
+				socket.emit("deleteText", { _id }, ({ error }) => {
 					dispatch(hideLoading());
 					if (error) {
-						Swal.fire('Error', error.message, 'error');
+						Swal.fire("Error", error.message, "error");
 					}
 				});
 			}
@@ -172,11 +231,11 @@ const Chat = ({ location }) => {
 		const textElem = document.querySelector(`.text[id="${_id}"]`);
 
 		if (textElem) {
-			textsRef.current.scroll({ top: textElem.offsetTop - 20, behavior: 'smooth' });
-			textElem.classList.remove('fade-enter-active');
-			setTimeout(() => textElem.classList.add('fade-enter-active'), 300);
+			textsRef.current.scroll({ top: textElem.offsetTop - 20, behavior: "smooth" });
+			textElem.classList.remove("fade-enter-active");
+			setTimeout(() => textElem.classList.add("fade-enter-active"), 300);
 		} else {
-			Swal.fire('Error', 'The text was not found', 'error');
+			Swal.fire("Error", "The text was not found", "error");
 		}
 	};
 
@@ -184,47 +243,39 @@ const Chat = ({ location }) => {
 		const media = mediaUploadRef.current.files[0];
 
 		if (media) {
-			const typeSplitted = media.type.split('/');
+			const typeSplitted = media.type.split("/");
 			const type = typeSplitted[0];
 			const extension = typeSplitted[1];
 
-			if (type === 'image' || (type === 'video' && ['mp4', 'ogg', 'webm'].includes(extension))) {
+			if (type === "image" || (type === "video" && ["mp4", "ogg", "webm"].includes(extension))) {
 				if (media.size < 1024 * 1024 * 15) {
-					const fr = new FileReader();
-
-					fr.onload = () => {
-						setNewText(state => ({ ...state, media: { originalname: media.name, buffer: fr.result } }));
-						dispatch(hideLoading());
-					};
-
-					fr.readAsArrayBuffer(media);
-					dispatch(showLoading());
+					setNewText(state => ({ ...state, media }));
 				} else {
-					Swal.fire('Error', 'Media too big', 'error');
+					Swal.fire("Error", "Media too big", "error");
 					setNewText(state => ({ ...state, media: null }));
 				}
 			} else {
-				Swal.fire('Error', 'Invalid media type', 'error');
+				Swal.fire("Error", "Invalid media type", "error");
 				setNewText(state => ({ ...state, media: null }));
 			}
-		} else setUploadMediaType(null);
+		} else setNewText(state => ({ ...state, media: null }));
 	};
 
 	const handleToggleTextMenu = (_id, setFalse) => {
 		const textElement = document.querySelector(`.text[id="${_id}"]`);
-		const textContentElement = textElement.querySelector('.text-content');
-		const textMenuToggleElement = textElement.querySelector('.text-menu-toggle');
+		const textContentElement = textElement.querySelector(".text-content");
+		const textMenuToggleElement = textElement.querySelector(".text-menu-toggle");
 
 		if ((textElement.clientWidth - textContentElement.clientWidth) <= 160) {
-			textMenuToggleElement.setAttribute('opposite', '');
+			textMenuToggleElement.setAttribute("opposite", "");
 		} else {
-			textMenuToggleElement.removeAttribute('opposite');
+			textMenuToggleElement.removeAttribute("opposite");
 		}
 
 		if ((textsRef.current.scrollHeight - textElement.offsetTop) < 120) {
-			textMenuToggleElement.setAttribute('flip', '');
+			textMenuToggleElement.setAttribute("flip", "");
 		} else {
-			textMenuToggleElement.removeAttribute('flip');
+			textMenuToggleElement.removeAttribute("flip");
 		}
 
 		setTexts(texts => texts.map(text => {
@@ -237,12 +288,13 @@ const Chat = ({ location }) => {
 	};
 
 	const handleInvitationLink = () => {
-		const urlParams = queryString.stringify({
+		const urlQuery = queryString.stringify({
 			room: query.room,
 			password: query.password
 		});
-		navigator.clipboard.writeText(`${COMH_URI}?${urlParams}`);
-		Swal.fire('Info', 'Invitation link copied to your clipboard', 'info');
+
+		navigator.clipboard.writeText(`${window.comhUri}/#/?${urlQuery}`);
+		Swal.fire("Info", "Invitation link copied to your clipboard", "info");
 	};
 
 	return (
@@ -255,7 +307,7 @@ const Chat = ({ location }) => {
 						<CSSTransition in={showMenu} timeout={300} classNames="fade" unmountOnExit={true}>
 							<div className="chat-menu-content">
 								<ul>
-									<li onClick={() => history.push('/')}><FaSignOutAlt /> <div>exit</div></li>
+									<li onClick={() => history.push("/")}><FaSignOutAlt /> <div>exit</div></li>
 									<li onClick={handleInvitationLink}><FaLink /> <div>Link</div></li>
 								</ul>
 							</div>

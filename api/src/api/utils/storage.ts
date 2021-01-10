@@ -15,7 +15,7 @@ export type File = {
 	buffer: Buffer
 }
 
-export const addItem = async (file: File) => {
+export const addItem = async (file: File, _path: string) => {
 	const key = crypto.randomBytes(20).toString("hex") + path.extname(file.originalname);
 
 	await cos.putObject({
@@ -24,7 +24,26 @@ export const addItem = async (file: File) => {
 		Body: file.buffer
 	}).promise();
 
-	return `${process.env.DOMAIN}/file/${key}`;
+	return `${process.env.DOMAIN}/${_path}/${key}`;
+};
+
+export const checkItemExists = async (_path: string) => {
+	const key = path.basename(_path);
+
+	try {
+		await cos.headObject({
+			Bucket: process.env.IBM_COS_BUCKET,
+			Key: key
+		}).promise();
+
+		return true;
+	} catch (err) {
+		if (err.code === "NoSuchKey") {
+			return false;
+		}
+
+		throw err;
+	}
 };
 
 export const getItem = async (key: string) => {

@@ -1,11 +1,9 @@
-import mime from "mime";
-import path from "path";
 import { Socket, Namespace } from "socket.io";
 import { TextModel } from "../models/text";
 import { UserModel } from "../models/user";
 import { RoomModel } from "../models/room";
-import * as storage from "../utils/storage";
 import * as sha256 from "../utils/sha256";
+import * as storage from "../utils/storage";
 
 interface JoinParams {
 	name: string;
@@ -16,7 +14,7 @@ interface JoinParams {
 interface SendTextParams {
 	text: string;
 	tagged: string;
-	media: storage.File;
+	media: string;
 };
 
 interface DeleteTextParams {
@@ -49,7 +47,7 @@ export const join = async (socket: Socket, { name, room: roomName, hashedPasswor
 		room.save();
 	}
 
-	if (await UserModel.exists({ name, room: room._id })) return callback({ error: { message: `A user with the name of ${name} already exists in ${room}` } });
+	if (await UserModel.exists({ name, room: room._id })) return callback({ error: { message: `A user with the name of ${name} already exists in ${room.name}` } });
 
 	const user = new UserModel({ _id: socket.id, name, room: room._id });
 
@@ -72,7 +70,7 @@ export const join = async (socket: Socket, { name, room: roomName, hashedPasswor
 	socket.broadcast.to(room.name).emit("text", { text: { text: `${name} has joined the chat` }, unencrypted: true });
 
 	socket.join(room.name);
-	console.log(`A new user has joined "${room.name}" with the name of "${name}"`);
+	console.log(`A new user has joined "${room.name}" with the name of "${name}" and socket id "${socket.id}"`);
 
 	callback({ backup: backup.length > 0 ? backup : null });
 	socket.emit("text", { text: { text: `Welcome, ${name} to ${room.name}` }, unencrypted: true });
@@ -88,22 +86,23 @@ export const sendText = async (io: Namespace, socket: Socket, { text, tagged, me
 			return callback({ error: { message: "You weren't found in the room. Try to rejoin" } });
 		}
 
+		const room = await RoomModel.findOne({ _id: user.room });
+
+		if (!room) {
+			return callback({ error: { message: "Your current room wasn't found or has been deleted" } });
+		}
+
 		const _text = new TextModel({
 			text,
 			sender: user.name,
 			room: user.room
 		});
 
-		if (media && media.originalname && media.buffer) {
-			const extension = path.extname(media.originalname);
-			const type = mime.getType(extension)?.split("/")[0];
-			if (type === "image" || (type === "video" && ["mp4", "ogg", "webm"].includes(extension))) {
-				if (media.buffer.byteLength > 1024 * 1024 * 15) {
-					return callback({ error: { message: "Media file too big" } });
-				}
-				_text.media = await storage.addItem(media);
+		if (media) {
+			if (await storage.checkItemExists(media)) {
+				_text.media = media;
 			} else {
-				return callback({ error: { message: "Invalid media type" } });
+				return callback({ error: { message: "An error occured while trying to find the media of the text" } });
 			}
 		}
 
@@ -111,7 +110,7 @@ export const sendText = async (io: Namespace, socket: Socket, { text, tagged, me
 
 		if (tagged) {
 			const taggedText = await TextModel.findOne({ _id: tagged });
-			if (!taggedText || taggedText.room !== user.room) {
+			if (!taggedText || taggedText.room.toString() !== user.room.toString()) {
 				return callback({ error: { message: "The tagged text was not found or has been deleted" } });
 			}
 			responseText.tagged = taggedText.toObject();
@@ -126,9 +125,11 @@ export const sendText = async (io: Namespace, socket: Socket, { text, tagged, me
 
 		await _text.save();
 
-		io.to((await RoomModel.findOne({ _id: user.room }))?.name || "").emit("text", { text: responseText });
+		io.to(room.name).emit("text", { text: responseText });
 
 		return callback({});
+	} else {
+		return callback({ error: { message: "Text or media is required" } });
 	}
 };
 
@@ -146,26 +147,45 @@ export const deleteText = async (io: Namespace, socket: Socket, { _id }: DeleteT
 
 		if (text.sender !== user.name) return callback({ error: { message: "You can only delete your own text" } });
 
+		const room = await RoomModel.findOne({ _id: user.room });
+
+		if (!room) {
+			return callback({ error: { message: "Your current room wasn't found or has been deleted" } });
+		}
+
 		await text.remove();
 
-		io.to((await RoomModel.findOne({ _id: user.room }))?.name || "").emit("deletedText", { _id });
+		if (text.media) {
+			try {
+				await storage.deleteItem(text.media);
+			} catch {
+			}
+		}
+
+		io.to(room.name).emit("deletedText", { _id });
 
 		return callback({});
+	} else {
+		return callback({ error: { messsage: "Text _id is required" } });
 	}
 };
 
 export const disconnect = async (socket: Socket) => {
 	const user = await UserModel.findOne({ _id: socket.id });
 
-	if (!user) {
-		return console.log("An error occured while trying to get the disconnected user");
+	if (user) {
+		const room = await RoomModel.findOne({ _id: user.room });
+
+		if (room) {
+			socket.broadcast.to(room.name).emit("text", { text: { text: `${user.name} has left the chat` }, unencrypted: true });
+
+			console.log(`A user with the name of "${user.name}" from room "${room.name}" has left, with socket id "${socket.id}"`);
+
+			await UserModel.deleteOne({ _id: user._id });
+		} else {
+			console.log(`A user named "${user.name}" from a undefined or deleted room has left, with socket id "${socket.id}"`);
+		}
+	} else {
+		console.log(`Failed to get the name of disconnected user, with socket id "${socket.id}"`);
 	}
-
-	const roomName = (await RoomModel.findOne({ _id: user.room }))?.name;
-
-	socket.broadcast.to(roomName || "").emit("text", { text: { text: `${user.name} has left the chat` }, unencrypted: true });
-
-	await UserModel.deleteOne({ _id: user._id });
-
-	console.log(`A user from "${roomName}" and with the name of "${user.name}" has left`);
 };
