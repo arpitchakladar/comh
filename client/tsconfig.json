@@ -1,8 +1,8 @@
 {
 	"files": [
-		"../src/types/global.d.ts",
-		"../src/types/svg.d.ts",
-		"../src/types/environment.d.ts"
+		"./src/types/global.d.ts",
+		"./src/types/svg.d.ts",
+		"./src/types/environment.d.ts"
 	],
 	"compilerOptions": {
 		"target": "es2020",
@@ -14,7 +14,7 @@
 		"noImplicitAny": true,
 		"skipLibCheck": true,
 		"moduleResolution": "node",
-		"baseUrl": "../",
+		"baseUrl": "./",
 		"paths": {
 			"@/*": ["./src/*"]
 		},

@@ -6,7 +6,6 @@ const urlsToCache = [
 	"/bundle.js",
 	"/favicon.png",
 	"/favicon.ico",
-	"/assets/loading.gif",
 	"/assets/notify.mp3",
 	"https://fonts.googleapis.com/css2?family=Montserrat&display=swap",
 	"https://fonts.gstatic.com/s/montserrat/v15/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2",
@@ -18,7 +17,11 @@ self.addEventListener("install", (event) => {
 	event.waitUntil(
 		caches.open(CACHE_NAME)
 			.then((cache) => {
-				return cache.addAll(urlsToCache);
+				return Promise.all(urlsToCache.map((url) => {
+					return cache.add(url).catch((reason) => {
+						console.log(`Failed to add ${url} to service worker due to reason "${reason}"`);
+					});
+				}));
 			})
 	);
 });

@@ -18,7 +18,7 @@ ReactDOM.render(
 	document.getElementById("root")
 );
 
-if (process.env.NODE_ENV as "production" | "development" === "production") {
+if (process.env.NODE_ENV === "production" as string) {
 	if ("serviceWorker" in navigator) {
 		navigator.serviceWorker.register("/sw.js");
 	}

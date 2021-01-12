@@ -1,9 +1,11 @@
 api/node_modules
 api/.env
 api/.gitignore
+api/.vscode
 api/dist
 
 client/node_modules
 client/.vercel
+client/.vscode
 client/.gitignore
 client/dist

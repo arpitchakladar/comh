@@ -21,11 +21,11 @@ const ENV = process.env.NODE_ENV || "development";
 
 const production = ENV === "production";
 
-const __root = path.resolve(__dirname, "..");
-const __publicDir = path.resolve(__root, "public");
-const __configDir = path.resolve(__root, "config");
-const __srcDir = path.resolve(__root, "src");
-const __distDir = path.resolve(__root, "dist");
+const __rootDir = path.resolve(__dirname, "..");
+const __publicDir = path.resolve(__rootDir, "public");
+const __configDir = path.resolve(__rootDir, "config");
+const __srcDir = path.resolve(__rootDir, "src");
+const __distDir = path.resolve(__rootDir, "dist");
 
 const extensions = [".js", ".jsx", ".ts", ".tsx"]
 
@@ -122,7 +122,7 @@ export default [{
 			]
 		}),
 		typescript({
-			tsconfig: path.resolve(__configDir, "tsconfig.json")
+			tsconfig: path.resolve(__rootDir, "tsconfig.json")
 		}),
 		babel({
 			babelHelpers: "bundled",
