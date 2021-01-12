@@ -1,4 +1,4 @@
-export default time => {
+export default (time: string) => {
 	const elapsedTime = Date.now() - Date.parse(time);
 
 	let t = 12 * 30 * 24 * 60 * 60 * 1000;
@@ -32,5 +32,5 @@ export default time => {
 		return `${Math.floor(elapsedTime / t)} secs`;
 	}
 
-	return '0 secs';
+	return "0 secs";
 };

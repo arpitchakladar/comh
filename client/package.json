@@ -7,9 +7,9 @@
 	"description": "A texting app",
 	"scripts": {
 		"start": "serve dist -p 8080",
-		"dev": "NODE_ENV=development rollup -c -w",
-		"build:dev": "NODE_ENV=development rollup -c",
-		"build": "NODE_ENV=production rollup -c"
+		"dev": "rm -rf dist && NODE_ENV=development rollup -c \"./config/rollup.config.js\" -w",
+		"build:dev": "rm -rf dist && NODE_ENV=development rollup -c \"./config/rollup.config.js\"",
+		"build": "rm -rf dist && NODE_ENV=production rollup -c \"./config/rollup.config.js\""
 	},
 	"dependencies": {
 		"axios": "^0.21.1",
@@ -18,6 +18,7 @@
 		"query-string": "^6.13.1",
 		"react-icons": "^3.10.0",
 		"react-linkify": "^1.0.0-alpha",
+		"react-loading-spinner": "^1.0.12",
 		"react-redux": "^7.2.0",
 		"react-router-dom": "^5.2.0",
 		"react-transition-group": "^4.4.1",
@@ -28,13 +29,23 @@
 	"devDependencies": {
 		"@babel/core": "^7.12.10",
 		"@babel/preset-env": "^7.12.11",
-		"@babel/preset-react": "^7.12.10",
 		"@rollup/plugin-alias": "^3.1.1",
 		"@rollup/plugin-babel": "^5.2.2",
 		"@rollup/plugin-commonjs": "^17.0.0",
 		"@rollup/plugin-json": "^4.1.0",
 		"@rollup/plugin-node-resolve": "^11.0.1",
 		"@rollup/plugin-replace": "^2.3.4",
+		"@types/crypto-js": "^4.0.1",
+		"@types/node": "^14.14.20",
+		"@types/query-string": "^6.3.0",
+		"@types/react": "^17.0.0",
+		"@types/react-dom": "^17.0.0",
+		"@types/react-icons": "^3.0.0",
+		"@types/react-linkify": "^1.0.0",
+		"@types/react-redux": "^7.1.15",
+		"@types/react-router-dom": "^5.1.7",
+		"@types/react-transition-group": "^4.4.0",
+		"@types/socket.io-client": "^1.4.34",
 		"autoprefixer": "^10.2.1",
 		"cssnano": "^4.1.10",
 		"node-sass": "^4.13.1",
@@ -51,6 +62,8 @@
 		"rollup-plugin-react-svg": "^3.0.3",
 		"rollup-plugin-serve": "^1.1.0",
 		"rollup-plugin-terser": "^7.0.2",
-		"serve": "^11.3.2"
+		"rollup-plugin-typescript2": "^0.29.0",
+		"serve": "^11.3.2",
+		"typescript": "^4.1.3"
 	}
 }

@@ -4,7 +4,8 @@ import "./Join.scss";
 import Swal from "sweetalert2";
 import queryString from "query-string";
 import { useHistory } from "react-router-dom";
-import validators from "@/validators/validateUser";
+import validateUser from "@/validators/validateUser";
+import type { UrlQuery } from "@/utils/urlQuery";
 
 const Join = () => {
 	const [formData, setFormData] = useState({
@@ -18,7 +19,7 @@ const Join = () => {
 		password: ""
 	});
 	const history = useHistory();
-	const query = useMemo(() => queryString.parse(history.location.search), [history.location.search]);
+	const query = useMemo<UrlQuery>(() => queryString.parse(history.location.search), [history.location.search]);
 
 	useEffect(() => {
 		let mounted = true;
@@ -49,26 +50,32 @@ const Join = () => {
 			});
 		}
 
-		return () => mounted = false;
+		return () => {
+			mounted = false
+		};
 	}, [history]);
 
-	const handleChange = ({ target: { name, value } }) => {
+	const handleChange = ({ target: { name, value } }: React.ChangeEvent<HTMLInputElement>) => {
 		setFormData(state => ({ ...state, [name]: value }));
 		setFormErrors(state => ({ ...state, [name]: "" }));
 	};
 
-	const handleBlur = ({ target: { name, value } }) => {
-		setFormErrors(state => ({ ...state, [name]: validators[name](value) }));
+	const handleBlur = ({ target: { name, value } }: React.ChangeEvent<HTMLInputElement>) => {
+		setFormErrors(state => ({ ...state, [name]: validateUser[name](value) }));
 	};
 
-	const handleSubmit = e => {
+	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 
-		const errors = {};
+		const errors: {
+			[key: string]: string
+		} = {};
 		for (const key of Object.keys(formData)) {
-			errors[key] = validators[key](formData[key]);
+			errors[key] = validateUser[key]((formData as typeof errors)[key]);
 		}
-		setFormErrors(errors);
+
+		setFormErrors(errors as typeof formErrors);
+
 		if (Object.values(errors).every(error => error === "")) {
 			const urlQuery = queryString.stringify({
 				name: formData.name.trim(),
@@ -87,28 +94,28 @@ const Join = () => {
 			<form onSubmit={handleSubmit} autoComplete="off">
 				<input
 					type="text"
-					maxLength="32"
+					maxLength={32}
 					name="name"
 					placeholder="Name"
-					invalid={formErrors.name ? formErrors.name : undefined}
+					data-invalid={formErrors.name ? formErrors.name : undefined}
 					value={formData.name} onChange={handleChange} onBlur={handleBlur}
 				/>
 				{formErrors.name !== "" && <div className="validation-error">{formErrors.name}</div>}
 				<input
 					type="text"
-					maxLength="50"
+					maxLength={50}
 					name="room"
 					placeholder="Room"
-					invalid={formErrors.room ? formErrors.room : undefined}
+					data-invalid={formErrors.room ? formErrors.room : undefined}
 					value={formData.room} onChange={handleChange} onBlur={handleBlur}
 				/>
 				{formErrors.room !== "" && <div className="validation-error">{formErrors.room}</div>}
 				<input
 					type="password"
-					maxLength="50"
+					maxLength={50}
 					name="password"
 					placeholder="Password"
-					invalid={formErrors.password ? formErrors.password : undefined}
+					data-invalid={formErrors.password ? formErrors.password : undefined}
 					value={formData.password} onChange={handleChange} onBlur={handleBlur}
 				/>
 				{formErrors.password !== "" && <div className="validation-error">{formErrors.password}</div>}

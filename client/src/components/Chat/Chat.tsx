@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, FormEvent } from "react";
 import "./Chat.scss";
 import { CSSTransition } from "react-transition-group";
 import { FaSignOutAlt, FaArrowRight, FaTag, FaTimes, FaArrowDown, FaEllipsisV, FaUpload, FaImage, FaLink } from "react-icons/fa";
@@ -6,32 +6,86 @@ import { useDispatch } from "react-redux";
 import { showLoading, hideLoading } from "@/actions/loading";
 import queryString from "query-string";
 import io from "socket.io-client";
-import { useHistory } from "react-router-dom";
+import { RouteProps, useHistory } from "react-router-dom";
 import cryptoAES from "crypto-js/aes";
 import cryptoSHA256 from "crypto-js/sha256";
 import Utf8 from "crypto-js/enc-utf8"
 import Linkify from "react-linkify";
 import Swal from "sweetalert2";
 import axios from "axios";
+import ErrorIcon from "@/svg/error.svg";
 import validators from "@/validators/validateUser";
 import Media from "@/components/Media/Media";
+import Loader from "@/components/Loader/Loader";
 import timeElapsed from "@/methods/timeElapsed";
+import type { UrlQuery } from "@/utils/urlQuery";
 
-let socket;
+let socket: SocketIOClient.Socket;
 const audio = new Audio("/assets/notify.mp3");
 audio.volume = 0.3;
 
-const Chat = ({ location }) => {
-	const [texts, setTexts] =	useState(null);
-	const [newText, setNewText] = useState({ text: "", tagged: null, media: null });
+interface ChatProps extends RouteProps {};
+
+interface ResponseError {
+	message: string;
+};
+
+interface ReceivedText {
+	_id: string;
+	text?: string;
+	media?: string;
+	tagged?: ReceivedText;
+	sender?: string;
+	createdAt?: string;
+};
+
+interface Text extends ReceivedText {
+	menu?: boolean;
+};
+
+interface EmitJoinResponse {
+	error?: ResponseError;
+	backup?: ReceivedText[];
+};
+
+interface EmitSendTextResponse {
+	error?: ResponseError;
+};
+
+interface EmitDeleteTextResponse {
+	error?: ResponseError;
+};
+
+interface OnTextResponse {
+	text: ReceivedText;
+	unencrypted?: boolean;
+};
+
+interface OnDeletedTextResponse {
+	_id: string;
+};
+
+interface MediaUploadResponse {
+	url: string;
+};
+
+interface NewText {
+	text: string;
+	media: File | null;
+	tagged: string | null;
+};
+
+const Chat: React.FC<ChatProps> = ({ location }) => {
+	const [texts, setTexts] =	useState<Text[] | null>(null);
+	const [newText, setNewText] = useState<NewText>({ text: "", tagged: null, media: null });
 	const [showScrollToTheBottom, setShowScrollToTheBottom] = useState(false);
 	const [showMenu, setShowMenu] = useState(false);
-	const [media, setMedia] = useState(null);
+	const [media, setMedia] = useState<string | null>(null);
 	const history = useHistory();
-	const textsRef = useRef(null);
-	const mediaUploadRef = useRef(null);
-	const textInputRef = useRef(null);
-	const query = useMemo(() => queryString.parse(location.search), [location.search]);
+	const textsRef = useRef<null | HTMLDivElement>(null);
+	const mediaUploadRef = useRef<HTMLInputElement | null>(null);
+	const textInputRef = useRef<HTMLInputElement | null>(null);
+	const query = useMemo<UrlQuery>(() => queryString.parse(location!.search), [location!.search]);
 	const taggedText = useMemo(() => {
 		if (texts && newText.tagged) return texts.find(text => text._id === newText.tagged);
 		else return null;
@@ -71,7 +125,7 @@ const Chat = ({ location }) => {
 				name: query.name,
 				room: query.room,
 				hashedPassword: cryptoSHA256(query.password).toString()
-			}, ({ error, backup }) => {
+			}, ({ error, backup }: EmitJoinResponse) => {
 				if (mounted) {
 					if (error) {
 						Swal.fire("Error", error.message, "error");
@@ -86,10 +140,10 @@ const Chat = ({ location }) => {
 								if (text.tagged) {
 									tagged = {
 										...text.tagged,
-										text: text.tagged.text ? cryptoAES.decrypt(text.tagged.text, query.password).toString(Utf8) : undefined
+										text: text.tagged.text ? cryptoAES.decrypt(text.tagged.text, query.password!).toString(Utf8) : undefined
 									};
 								}
-								return { ...text, tagged, text: cryptoAES.decrypt(text.text, query.password).toString(Utf8) };
+								return { ...text, tagged, text: text.text ? cryptoAES.decrypt(text.text, query.password!).toString(Utf8) : undefined };
 							});
 							return texts ? [..._backup, ...texts] : _backup;
 						});
@@ -97,37 +151,37 @@ const Chat = ({ location }) => {
 				}
 			});
 
-			socket.on("text", ({ text, unencrypted }) => {
+			socket.on("text", ({ text, unencrypted }: OnTextResponse) => {
 				if (mounted) {
 					setTexts(state => {
-						const _text = text.text ? (unencrypted ? text.text : cryptoAES.decrypt(text.text, query.password).toString(Utf8)) : undefined;
+						const _text = text.text ? (unencrypted ? text.text : cryptoAES.decrypt(text.text, query.password!).toString(Utf8)) : undefined;
 						let tagged = undefined;
 						if (text.tagged) {
 							tagged = {
 								...text.tagged,
-								text: text.tagged.text ? cryptoAES.decrypt(text.tagged.text, query.password).toString(Utf8) : undefined
+								text: text.tagged.text ? cryptoAES.decrypt(text.tagged.text, query.password!).toString(Utf8) : undefined
 							};
 						}
 						return state ? [...state, { ...text, tagged, text: _text }] : [{ ...text, tagged, text: _text }];
 					});
-					setTimeout(() => {
-						if ((textsRef.current.clientHeight + textsRef.current.scrollTop) >= (textsRef.current.scrollHeight - 200)) scrollToBottom();
-					}, 400);
+
+					if (textsRef.current) {
+						setTimeout(() => {
+							if ((textsRef.current!.clientHeight + textsRef.current!.scrollTop) >= (textsRef.current!.scrollHeight - 200)) {
+								scrollToBottom();
+							}
+						}, 400);
+
+						setShowScrollToTheBottom(textsRef.current.scrollHeight - textsRef.current.scrollTop > 1500);
+					}
+
 					if (document.hidden) {
 						audio.play();
 					}
-					setShowScrollToTheBottom(textsRef.current.scrollHeight - textsRef.current.scrollTop > 1500);
 				}
 			});
 
-			socket.on("deletedText", ({ _id }) => {
-				if (mounted) {
-					setTexts(texts => texts.filter(t => t._id !== _id));
-					setShowScrollToTheBottom(textsRef.current.scrollHeight - textsRef.current.scrollTop > 1500);
-				}
-			});
-
-			textsRef.current.addEventListener("scroll", () => setShowScrollToTheBottom(textsRef.current.scrollHeight - textsRef.current.scrollTop > 1500));
+			textsRef.current?.addEventListener("scroll", () => setShowScrollToTheBottom(textsRef.current!.scrollHeight - textsRef.current!.scrollTop > 1500));
 		} else {
 			history.push("/");
 		}
@@ -135,14 +189,48 @@ const Chat = ({ location }) => {
 		return () => {
 			mounted = false;
 			if (socket) {
-				socket.disconnect(true);
+				socket.disconnect();
 			}
 		};
 	}, [query, history]);
 
-	const scrollToBottom = () => textsRef.current.scroll({ top: textsRef.current.scrollHeight, behavior: "smooth" });
+	useEffect(() => {
+		let mounted = true;
 
-	const handleSubmit = e => {
+		socket.on("deletedText", ({ _id }: OnDeletedTextResponse) => {
+			if (mounted) {
+				if (texts) {
+					setTexts((texts) => {
+						const _texts = [];
+
+						for (const text of texts!) {
+							if (text._id !== _id) {
+								if (text.tagged?._id === _id) {
+									_texts.push({ ...text, tagged: undefined });
+								} else {
+									_texts.push(text);
+								}
+							}
+						}
+
+						return _texts;
+					});
+				}
+
+				if (textsRef.current) {
+					setShowScrollToTheBottom((textsRef.current.scrollHeight - textsRef.current.scrollTop) > 1500);
+				}
+			}
+		});
+
+		return () => {
+			mounted = false;
+		};
+	}, [texts]);
+
+	const scrollToBottom = () => textsRef.current?.scroll({ top: textsRef.current.scrollHeight, behavior: "smooth" });
+
+	const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 
 		if (newText.text || newText.media) {
@@ -151,13 +239,13 @@ const Chat = ({ location }) => {
 			} else {
 				dispatch(showLoading());
 
-				new Promise((resolve, _) => {
-					new Promise((resolve, reject) => {
-						new Promise((resolve, reject) => {
+				new Promise<void>((resolve, _) => {
+					new Promise<void>((resolve, reject) => {
+						new Promise<string | undefined>((resolve, reject) => {
 							if (newText.media) {
 								const formData = new FormData();
 								formData.append("media", newText.media);
-								axios.post(`${window.comhApiUri}/media/upload`, formData, {
+								axios.post<MediaUploadResponse>(`${window.comhApiUri}/media/upload`, formData, {
 									headers: {
 										"Content-Type": "multipart/form-data"
 									}
@@ -178,11 +266,11 @@ const Chat = ({ location }) => {
 							socket.emit(
 								"sendText",
 								{
-									text: cryptoAES.encrypt(newText.text, query.password).toString(),
+									text: cryptoAES.encrypt(newText.text, query.password!).toString(),
 									tagged: newText.tagged,
 									media
 								},
-								({ error }) => {
+								({ error }: EmitSendTextResponse) => {
 									if (error) reject(error.message);
 									resolve();
 								}
@@ -190,7 +278,7 @@ const Chat = ({ location }) => {
 						}).catch(reject);
 					}).then(() => {
 						resolve();
-					}).catch(async (message) => {
+					}).catch((message) => {
 						Swal.fire("Error", message, "error");
 						resolve();
 					});
@@ -203,21 +291,24 @@ const Chat = ({ location }) => {
 		} else {
 			Swal.fire("Error", "Text or a media is required", "error");
 		}
-		mediaUploadRef.current.value = null;
-	};
 
-	const handleTag = _id => {
-		if (texts.findIndex(text => text._id === _id) > -1) {
-			setNewText(state => ({ ...state, tagged: _id }));
-			textInputRef.current.focus();
+		if (mediaUploadRef.current) {
+			(mediaUploadRef.current!.value as any) = null;
 		}
 	};
 
-	const handleDelete = _id => {
+	const handleTag = (_id: string) => {
+		if (texts!.findIndex(text => text._id === _id) > -1) {
+			setNewText(state => ({ ...state, tagged: _id }));
+			textInputRef.current?.focus();
+		}
+	};
+
+	const handleDelete = (_id: string) => {
 		Swal.fire("Are you sure?", "Are you sure you want to delete the text?", "question").then(({ value }) => {
 			if (value) {
 				dispatch(showLoading());
-				socket.emit("deleteText", { _id }, ({ error }) => {
+				socket.emit("deleteText", { _id }, ({ error }: EmitDeleteTextResponse) => {
 					dispatch(hideLoading());
 					if (error) {
 						Swal.fire("Error", error.message, "error");
@@ -227,11 +318,11 @@ const Chat = ({ location }) => {
 		});
 	};
 
-	const scrollToText = _id => {
-		const textElem = document.querySelector(`.text[id="${_id}"]`);
+	const scrollToText = (_id: string) => {
+		const textElem = document.querySelector<HTMLDivElement>(`.text[id="${_id}"]`);
 
 		if (textElem) {
-			textsRef.current.scroll({ top: textElem.offsetTop - 20, behavior: "smooth" });
+			textsRef.current!.scroll({ top: textElem.offsetTop - 20, behavior: "smooth" });
 			textElem.classList.remove("fade-enter-active");
 			setTimeout(() => textElem.classList.add("fade-enter-active"), 300);
 		} else {
@@ -240,9 +331,10 @@ const Chat = ({ location }) => {
 	};
 
 	const handleMediaUpload = () => {
-		const media = mediaUploadRef.current.files[0];
+		const mediaFiles = mediaUploadRef.current?.files;
 
-		if (media) {
+		if (mediaFiles && mediaFiles[0]) {
+			const media = mediaFiles[0];
 			const typeSplitted = media.type.split("/");
 			const type = typeSplitted[0];
 			const extension = typeSplitted[1];
@@ -261,24 +353,24 @@ const Chat = ({ location }) => {
 		} else setNewText(state => ({ ...state, media: null }));
 	};
 
-	const handleToggleTextMenu = (_id, setFalse) => {
-		const textElement = document.querySelector(`.text[id="${_id}"]`);
-		const textContentElement = textElement.querySelector(".text-content");
-		const textMenuToggleElement = textElement.querySelector(".text-menu-toggle");
+	const handleToggleTextMenu = (_id: string, setFalse?: boolean) => {
+		const textElement = document.querySelector<HTMLDivElement>(`.text[id="${_id}"]`);
+		const textContentElement = textElement!.querySelector<HTMLDivElement>(".text-content");
+		const textMenuToggleElement = textElement!.querySelector<HTMLButtonElement>(".text-menu-toggle");
 
-		if ((textElement.clientWidth - textContentElement.clientWidth) <= 160) {
-			textMenuToggleElement.setAttribute("opposite", "");
+		if ((textElement!.clientWidth - textContentElement!.clientWidth) <= 160) {
+			textMenuToggleElement!.setAttribute("opposite", "");
 		} else {
-			textMenuToggleElement.removeAttribute("opposite");
+			textMenuToggleElement!.removeAttribute("opposite");
 		}
 
-		if ((textsRef.current.scrollHeight - textElement.offsetTop) < 120) {
-			textMenuToggleElement.setAttribute("flip", "");
+		if ((textsRef.current!.scrollHeight - textElement!.offsetTop) < 120) {
+			textMenuToggleElement!.setAttribute("flip", "");
 		} else {
-			textMenuToggleElement.removeAttribute("flip");
+			textMenuToggleElement!.removeAttribute("flip");
 		}
 
-		setTexts(texts => texts.map(text => {
+		setTexts(texts => texts!.map(text => {
 			if (text._id === _id) text.menu = !text.menu;
 
 			if (setFalse) text.menu = false;
@@ -324,14 +416,33 @@ const Chat = ({ location }) => {
 											(query.name !== text.sender
 												? <div className="text-sender">{text.sender}{text.createdAt && <> • {timeElapsed(text.createdAt)} ago</>}</div>
 												: text.createdAt && <div className="text-createdAt">{timeElapsed(text.createdAt)} ago</div>)}
-										{text.tagged && <div className="text-tagged" onClick={() => scrollToText(text.tagged._id)}>
+										{text.tagged && <div className="text-tagged" onClick={() => scrollToText(text.tagged!._id)}>
 											<div className="text-tagged-sender">{text.tagged.sender}</div>
 											<div className="text-tagged-content">
-												{text.tagged.media && <Media loader={<img src="/assets/loading.gif" alt="Loading..." className="image-loader" />} src={text.tagged.media} alt="" className="text-tagged-media" disable={true} />}
+												{text.tagged.media &&
+													<Media
+														loader={<Loader className="media-loader" />}
+														error={<ErrorIcon />}
+														src={text.tagged.media}
+														alt=""
+														className="text-tagged-media"
+														disable={true}
+													/>
+												}
 												<div className="text-tagged-content-text">{text.tagged.text}</div>
 											</div>
 										</div>}
-										{text.media && <Media loader={<img src="/assets/loading.gif" alt="Loading..." className="media-loader" />} src={text.media} alt="" className="text-media" onClick={() => setMedia(text.media)} disable={true} />}
+										{text.media &&
+											<Media
+												loader={<Loader className="media-loader" />}
+												error={<ErrorIcon />}
+												src={text.media}
+												alt=""
+												className="text-media"
+												onClick={() => setMedia(text.media!)}
+												disable={true}
+											/>
+										}
 										<div className="text-content-text"><Linkify>{text.text}</Linkify></div>
 										{text.sender && <div className="text-menu">
 											<button className="text-menu-toggle" type="button" onClick={() => handleToggleTextMenu(text._id)} onBlur={() => handleToggleTextMenu(text._id, true)}><FaEllipsisV /></button>
@@ -352,7 +463,7 @@ const Chat = ({ location }) => {
 									</button>
 								</CSSTransition>
 							</>
-						: <img src="/assets/loading.gif" alt="Loading..." className="Loading" />
+						: <Loader className="texts-loader" />
 					}
 				</div>
 				<form className="new-text" onSubmit={handleSubmit} autoComplete="off">
@@ -361,7 +472,16 @@ const Chat = ({ location }) => {
 								<div className="text-content">
 									{taggedText.sender && <div className="text-sender">{taggedText.sender}</div>}
 									<div className="text-message">
-										{taggedText.media && <Media loader={<img src="/assets/loading.gif" alt="Loading..." className="media-loader" />} src={taggedText.media} alt="" className="text-tagged-media" disable={true} />}
+										{taggedText.media &&
+											<Media
+												loader={<Loader className="media-loader" />}
+												error={<ErrorIcon />}
+												src={taggedText.media}
+												alt=""
+												className="text-tagged-media"
+												disable={true}
+											/>
+										}
 										<div className="text-message-text">{taggedText.text}</div>
 									</div>
 									<button className="cancel" type="button" onClick={() => setNewText(state => ({ ...state, tagged: null }))}><FaTimes /></button>
@@ -373,7 +493,7 @@ const Chat = ({ location }) => {
 						<label htmlFor="upload-media-input" className="upload-media">
 							{newText.media ? <FaImage /> : <FaUpload />}
 						</label>
-						<input type="text" ref={textInputRef} maxLength="255" value={newText.text} onChange={e => setNewText(state => ({...state, text: e.target.value}))} />
+						<input type="text" ref={textInputRef} maxLength={255} value={newText.text} onChange={e => setNewText(state => ({...state, text: e.target.value}))} />
 						<button type="submit">
 							<FaArrowRight />
 						</button>
@@ -384,7 +504,14 @@ const Chat = ({ location }) => {
 				<div className="show-media">
 					<button className="close" onClick={() => setMedia(null)}><FaTimes /></button>
 					<div className="media">
-						<Media loader={<img src="/assets/loading.gif" alt="Loading..." className="media-loader" />} src={media} alt="" disable={false} controls />
+						<Media
+							loader={<Loader className="media-loader" />}
+							error={<ErrorIcon />}
+							src={media!}
+							alt=""
+							disable={false}
+							controls
+						/>
 					</div>
 				</div>
 			</CSSTransition>

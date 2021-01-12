@@ -15,10 +15,6 @@
 		grid-template-rows: 32px 1fr auto;
 		grid-template-columns: 100%;
 		padding: 16px;
-		.media-loader {
-			width: 100px;
-			height: 100px;
-		}
 		.chat-header {
 			display: flex;
 			justify-content: space-between;
@@ -82,6 +78,11 @@
 					}
 				}
 			}
+		}
+		.media-loader {
+			height: 50px;
+			width: 50px;
+			padding: 10px;
 		}
 		.texts {
 			border: 1px solid #8a8a8a;
@@ -323,6 +324,14 @@
 				background: #999;
 				cursor: pointer;
 			}
+			.texts-loader {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				width: 50px;
+				height: 50px;
+			}
 		}
 		.new-text {
 			.tagged {
@@ -421,6 +430,7 @@
 			border: none;
 			cursor: pointer;
 			color: #fff;
+			z-index: 1000;
 		}
 		.media {
 			width: 100vw;
@@ -428,6 +438,16 @@
 			$media-padding: 36px;
 			padding: $media-padding;
 			z-index: 201;
+			position: relative;
+			.media-loader {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				color: #333;
+				height: 50px;
+				width: 50px;
+			}
 			img, video {
 				object-fit: scale-down;
 				width: 100%;
@@ -442,6 +462,11 @@
 body[theme="dark"] {
 	.show-media {
 		background: rgba($color: #ddd, $alpha: 0.5);
+		.media {
+			.media-loader {
+				color: #ccc;
+			}
+		}
 	}
 	.chat-menu {
 		.chat-menu-content {

@@ -18,14 +18,16 @@ ReactDOM.render(
 	document.getElementById("root")
 );
 
-navigator.serviceWorker.register("/sw.js");
+if (process.env.NODE_ENV as "production" | "development" === "production") {
+	if ("serviceWorker" in navigator) {
+		navigator.serviceWorker.register("/sw.js");
+	}
+}
 
 document.addEventListener("DOMContentLoaded", () => {
-	const _theme = localStorage.getItem("theme") || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
-
-	document.body.setAttribute("theme", _theme);
+	document.body.setAttribute("theme", localStorage.getItem("theme") || ((window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light"));
 
 	if (!navigator.onLine) {
-		document.getElementById("root").innerHTML = "<div class=\"offline\">You are currently offline...</div>";
+		document.getElementById("root")!.innerHTML = "<div class=\"offline\">You are currently offline...</div>";
 	}
 }, false);

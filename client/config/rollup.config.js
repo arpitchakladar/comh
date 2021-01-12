@@ -11,20 +11,39 @@ import builtins from "rollup-plugin-node-builtins";
 import globals from "rollup-plugin-node-globals";
 import serve from "rollup-plugin-serve";
 import livereload from "rollup-plugin-livereload";
+import typescript from "rollup-plugin-typescript2";
 import { terser } from "rollup-plugin-terser";
 import reactSvg from "rollup-plugin-react-svg";
 import { minifyHTML } from "rollup-plugin-minify-html";
+import { DEFAULT_EXTENSIONS } from "@babel/core";
 
 const ENV = process.env.NODE_ENV || "development";
 
 const production = ENV === "production";
 
+const __root = path.resolve(__dirname, "..");
+const __publicDir = path.resolve(__root, "public");
+const __configDir = path.resolve(__root, "config");
+const __srcDir = path.resolve(__root, "src");
+const __distDir = path.resolve(__root, "dist");
+
+const extensions = [".js", ".jsx", ".ts", ".tsx"]
+
+const onwarn = ({ message }) => {
+	if (/The \'this\' keyword is equivalent to \'undefined\' at the top level of an ES module, and has been rewritten/.test(message)) {
+		return;
+	}
+
+	console.warn(message);
+};
+
 export default [{
-	input: path.resolve(__dirname, "public", "sw.js"),
+	input: path.resolve(__publicDir, "sw.js"),
 	output: {
-		file: path.resolve(__dirname, "dist", "sw.js"),
+		file: path.resolve(__distDir, "sw.js"),
 		format: "iife"
 	},
+	onwarn,
 	plugins: [
 		resolve({
 			extensions: [".js"],
@@ -36,17 +55,8 @@ export default [{
 		babel({
 			babelHelpers: "bundled",
 			babelrc: false,
-			exclude: [/\/core-js\//],
-			presets: [
-					[
-					"@babel/preset-env",
-					{
-						modules: false,
-						useBuiltIns: "usage",
-						corejs: 3
-					}
-				]
-			]
+			exclude: /(core-js|node_modules)/,
+			...require("./babel.sw.config")
 		}),
 		commonjs(),
 		production && terser(),
@@ -66,10 +76,10 @@ export default [{
 		})
 	]
 }, {
-	input: path.resolve(__dirname, "src", "index.js"),
+	input: path.resolve(__srcDir, "index.tsx"),
 	external: ["crypto", "react", "react-dom"],
 	output: {
-		file: path.resolve(__dirname, "dist", "bundle.js"),
+		file: path.resolve(__distDir, "bundle.js"),
 		format: "iife",
 		globals: {
 			"crypto": "crypto",
@@ -77,28 +87,22 @@ export default [{
 			"react-dom": "ReactDOM"
 		}
 	},
-	onwarn: ({ message }) => {
-		if (/The \'this\' keyword is equivalent to \'undefined\' at the top level of an ES module, and has been rewritten/.test(message)) {
-			return;
-		}
-
-		console.error(message);
-	},
+	onwarn,
 	plugins: [
 		copy({
 			targets: [
 				{
-					src: path.resolve(__dirname, "public", "**"),
-					dest: path.resolve(__dirname, "dist"),
+					src: path.resolve(__publicDir, "**"),
+					dest: path.resolve(__distDir),
 					ignore: [
-						path.resolve(__dirname, "public", "index.html"),
-						path.resolve(__dirname, "public", "sw.js"),
-						path.resolve(__dirname, "public", "assets")
+						path.resolve(__publicDir, "index.html"),
+						path.resolve(__publicDir, "sw.js"),
+						path.resolve(__publicDir, "assets")
 					]
 				},
 				{
-					src: path.resolve(__dirname, "public", "assets", "**"),
-					dest: path.resolve(__dirname, "dist", "assets")
+					src: path.resolve(__publicDir, "assets", "**"),
+					dest: path.resolve(__distDir, "assets")
 				}
 			]
 		}),
@@ -114,25 +118,34 @@ export default [{
 		}),
 		alias({
 			entries: [
-				{ find: "@", replacement: path.resolve(__dirname, "src") }
+				{ find: "@", replacement: __srcDir }
 			]
+		}),
+		typescript({
+			tsconfig: path.resolve(__configDir, "tsconfig.json")
 		}),
 		babel({
 			babelHelpers: "bundled",
-			exclude: "node_modules/**"
+			extensions: [...DEFAULT_EXTENSIONS, ...extensions],
+			compact: production,
+			babelrc: false,
+			exclude: /(core-js|node_modules)/,
+			...require("./babel.config")
 		}),
-		commonjs(),
+		commonjs({
+			extensions
+		}),
 		globals(),
 		builtins(),
 		json(),
 		postcss({
 			minimize: production,
 			config: {
-				path: path.resolve(__dirname, "postcss.config.js")
+				path: path.resolve(__configDir, "postcss.config.js")
 			},
 			modules: false,
 			extensions: [".css", ".scss"],
-			extract: path.resolve(__dirname, "dist", "style.css")
+			extract: path.resolve(__distDir, "style.css")
 		}),
 		reactSvg(),
 		!production && process.env.ROLLUP_WATCH && serve({

@@ -15,7 +15,7 @@
 		padding: 0.5rem;
 		border: 0.07rem solid #8a8a8a;
 		transition: 300ms ease-in background, 300ms ease-in color;
-		&[invalid] {
+		&[data-invalid] {
 			border-color: #E74C3C !important;
 		}
 	}
@@ -28,14 +28,15 @@
 		width: 100vw;
 		opacity: 0.5;
 		background: #333;
-	}
-	.Loading {
-		width: 100%;
-		max-width: 5rem;
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
+		color: #ccc;
+		.Loading {
+			width: 100%;
+			max-width: 50px;
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+		}
 	}
 	.toggle-theme {
 		width: 100%;
@@ -69,7 +70,8 @@ body[theme="dark"] {
 			background: #555;
 		}
 		.loading-backdrop {
-			background: #ddd;
+			background: #ccc;
+			color: #333;
 		}
 		input {
 			background: #333;

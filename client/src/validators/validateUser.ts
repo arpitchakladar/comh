@@ -1,5 +1,15 @@
+export interface StringIndexedValidateUserOptions {
+	[key: string]: (value: string) => string;
+};
+
+export interface ValidateUserOptions extends StringIndexedValidateUserOptions {
+	name: (value: string) => string;
+	room: (value: string) => string;
+	password: (value: string) => string;
+};
+
 export default {
-	name: value => {
+	name: (value: string) => {
 		if (!value) {
 			return "Name is required";
 		} else if (value.length > 32) {
@@ -7,7 +17,7 @@ export default {
 		}
 		return "";
 	},
-	room: value => {
+	room: (value: string) => {
 		if (!value) {
 			return "Room name is required";
 		} else if (value.length > 50) {
@@ -15,7 +25,7 @@ export default {
 		}
 		return "";
 	},
-	password: value => {
+	password: (value: string) => {
 		if (!value) {
 			return "Password is required";
 		} else if (value.length > 50) {
@@ -23,4 +33,4 @@ export default {
 		}
 		return "";
 	}
-};
+} as ValidateUserOptions;

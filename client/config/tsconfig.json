@@ -1,0 +1,31 @@
+{
+	"files": [
+		"../src/types/global.d.ts",
+		"../src/types/svg.d.ts",
+		"../src/types/environment.d.ts"
+	],
+	"compilerOptions": {
+		"target": "es2020",
+		"module": "es2015",
+		"outDir": "./dist",
+		"jsx": "react",
+		"strict": true,
+		"esModuleInterop": true,
+		"noImplicitAny": true,
+		"skipLibCheck": true,
+		"moduleResolution": "node",
+		"baseUrl": "../",
+		"paths": {
+			"@/*": ["./src/*"]
+		},
+		"typeRoots": [
+			"./src/types"
+		]
+	},
+	"include": [
+		"./src/**/*"
+	],
+	"exclude": [
+		"./node_modules/**/*"
+	]
+}
