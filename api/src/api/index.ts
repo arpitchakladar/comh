@@ -22,9 +22,8 @@ app.use(expressRateLimit({
 }));
 
 app.use(helmet());
-app.use(cors({
-	origin: "https://comh.now.sh"
-}));
+app.use(cors());
+app.options("*", cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
