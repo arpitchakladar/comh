@@ -27,7 +27,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 const server = http.createServer(app);
-const io = new SocketIOServer(server).sockets;
+const io = new SocketIOServer(server, {
+	cors: {
+		origin: ["https://comh.now.sh"]
+	}
+}).sockets;
 
 app.get("/", (_req, res) => res.send("Comh API."));
 
