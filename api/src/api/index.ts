@@ -3,7 +3,7 @@ import http from "http";
 import helmet from "helmet";
 import cors from "cors";
 import expressRateLimit from "express-rate-limit";
-import SocketIO from "socket.io";
+import { Server as SocketIOServer, Socket } from "socket.io";
 import * as db from "./utils/db";
 import * as chatControllers from "./controllers/chat";
 import mediaRoute from "./routes/media";
@@ -23,18 +23,17 @@ app.use(expressRateLimit({
 
 app.use(helmet());
 app.use(cors());
-app.options("*", cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 const server = http.createServer(app);
-const io = SocketIO(server).sockets;
+const io = new SocketIOServer(server).sockets;
 
 app.get("/", (_req, res) => res.send("Comh API."));
 
 app.use("/media", mediaRoute);
 
-io.on("connection", socket => {
+io.on("connection", (socket: Socket) => {
 	socket.on("join", (data, callback) => chatControllers.join(socket, data, callback));
 
 	socket.on("sendText", (data, callback) => chatControllers.sendText(io, socket, data, callback));
