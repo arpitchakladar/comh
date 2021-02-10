@@ -1,5 +1,5 @@
 import { Schema, Document,model } from "mongoose";
-import * as storage from "../utils/storage";
+import * as storage from "@/api/utils/storage";
 
 export interface Text extends Document {
 	text: string;

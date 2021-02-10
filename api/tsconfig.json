@@ -1,23 +1,30 @@
 {
-  "ts-node": {
-		"files": true
-	},
 	"files": [
-		"src/server.ts",
 		"src/types/helmet.d.ts",
 		"src/types/environment.d.ts"
-  ],
+	],
 	"compilerOptions": {
-		"target": "es5",
-		"module": "commonjs",
+		"target": "es2020",
+		"module": "esnext",
 		"outDir": "./dist",
 		"strict": true,
 		"esModuleInterop": true,
 		"noImplicitAny": true,
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
+		"moduleResolution": "node",
+		"baseUrl": "./",
+		"paths": {
+			"@/*": ["./src/*"]
+		},
 		"typeRoots": [
 			"./src/types"
 		]
-	}
+	},
+	"include": [
+		"./src/**/*"
+	],
+	"exclude": [
+		"./node_modules/**/*"
+	]
 }

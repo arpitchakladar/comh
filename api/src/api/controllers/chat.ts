@@ -1,9 +1,9 @@
 import { Socket, Namespace } from "socket.io";
-import { TextModel } from "../models/text";
-import { UserModel } from "../models/user";
-import { RoomModel } from "../models/room";
-import * as sha256 from "../utils/sha256";
-import * as storage from "../utils/storage";
+import { TextModel } from "@/api/models/text";
+import { UserModel } from "@/api/models/user";
+import { RoomModel } from "@/api/models/room";
+import * as sha256 from "@/api/utils/sha256";
+import * as storage from "@/api/utils/storage";
 
 interface JoinParams {
 	name: string;

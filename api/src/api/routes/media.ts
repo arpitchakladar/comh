@@ -1,6 +1,6 @@
 import express from "express";
-import * as fileControllers from "../controllers/media";
-import upload from "../utils/upload";
+import * as fileControllers from "@/api/controllers/media";
+import upload from "@/api/utils/upload";
 
 const router = express.Router();
 

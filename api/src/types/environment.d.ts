@@ -1,7 +1,7 @@
 declare global {
 	namespace NodeJS {
 		interface ProcessEnv {
-			NODE_ENV: 'development' | 'production';
+			NODE_ENV: "development" | "production";
 			PORT?: string;
 			DOMAIN: string;
 			IBM_COS_BUCKET: string;

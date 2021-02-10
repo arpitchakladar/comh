@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import mime from "mime";
 import path from "path";
-import * as storage from "../utils/storage";
+import * as storage from "@/api/utils/storage";
 
 export const getMedia = async (req: Request, res: Response, next: NextFunction) => {
 	const buffer = await storage.getItem(req.params.key);

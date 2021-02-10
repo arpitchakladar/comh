@@ -4,12 +4,12 @@ import helmet from "helmet";
 import cors from "cors";
 import expressRateLimit from "express-rate-limit";
 import { Server as SocketIOServer, Socket } from "socket.io";
-import * as db from "./utils/db";
-import * as chatControllers from "./controllers/chat";
-import mediaRoute from "./routes/media";
+import * as db from "@/api/utils/db";
+import * as chatControllers from "@/api/controllers/chat";
+import mediaRoute from "@/api/routes/media";
 
 db.connect().then(async () => {
-	const { UserModel } = await import("./models/user");
+	const { UserModel } = await import("@/api/models/user");
 	UserModel.deleteMany({});
 });
 
