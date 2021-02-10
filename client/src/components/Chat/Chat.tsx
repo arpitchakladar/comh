@@ -5,7 +5,7 @@ import { FaSignOutAlt, FaArrowRight, FaTag, FaTimes, FaArrowDown, FaEllipsisV, F
 import { useDispatch } from "react-redux";
 import { showLoading, hideLoading } from "@/actions/loading";
 import queryString from "query-string";
-import io from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 import { RouteProps, useHistory } from "react-router-dom";
 import cryptoAES from "crypto-js/aes";
 import cryptoSHA256 from "crypto-js/sha256";
@@ -20,7 +20,7 @@ import Loader from "@/components/Loader/Loader";
 import timeElapsed from "@/methods/timeElapsed";
 import type { UrlQuery } from "@/utils/urlQuery";
 
-let socket: SocketIOClient.Socket;
+let socket: Socket;
 const audio = new Audio("/assets/notify.mp3");
 audio.volume = 0.3;
 
