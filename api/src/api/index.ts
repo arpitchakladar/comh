@@ -29,7 +29,7 @@ app.use(express.urlencoded({ extended: false }));
 const server = http.createServer(app);
 const io = new SocketIOServer(server, {
 	cors: {
-		origin: ["https://comh.now.sh"]
+		origin: ["https://comh.now.sh", "https://comh.vercel.app"]
 	}
 }).sockets;
 
